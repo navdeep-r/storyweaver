@@ -101,12 +101,12 @@ const Header = () => {
             </motion.div>
           </form>
 
-          <div className="flex items-center space-x-3 sm:space-x-4">
+          <div className="flex items-center space-x-4">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={toggleCustomFields}
-              className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 ${showCustomFields
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${showCustomFields
                 ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/25'
                 : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600'
                 }`}
@@ -114,7 +114,7 @@ const Header = () => {
               {showCustomFields ? 'Hide Custom Fields' : 'Show Custom Fields'}
             </motion.button>
 
-            <div className="hidden sm:flex items-center relative">
+            <div className="hidden md:flex items-center relative">
               <motion.span
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
