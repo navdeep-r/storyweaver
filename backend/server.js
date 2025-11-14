@@ -14,14 +14,17 @@ const app = express();
 app.use(helmet());
 app.use(compression());
 
-const allowedOriginsEnv = 'http://localhost:5173';
+const allowedOriginsEnv = process.env.ALLOWED_ORIGINS || 'http://localhost:5173,https://storyweaver-zeta.vercel.app';
 const allowedOrigins = allowedOriginsEnv.split(',').map((s) => s.trim()).filter(Boolean);
+
 app.use(cors({
   origin: function (origin, cb) {
-    // allow non-browser requests (like curl) that have no origin
-    if (!origin) return cb(null, true);
-    if (allowedOrigins.includes(origin)) return cb(null, true);
-    return cb(new Error('CORS policy: origin not allowed'));
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin || allowedOrigins.includes(origin)) {
+      cb(null, true);
+    } else {
+      cb(new Error('CORS policy: origin not allowed'));
+    }
   }
 }));
 
@@ -250,6 +253,7 @@ async function ensureParsed(language) {
     const main = await parseMainCatalog();
 
     const tenMinutes = CACHE_TTL_MS;
+    
 
     // If no language requested -> empty books; return languages list in facets
     if (!language) {
