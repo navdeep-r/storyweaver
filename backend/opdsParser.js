@@ -24,9 +24,7 @@ const { XMLParser } = require('fast-xml-parser');
 const sanitizeHtml = require('sanitize-html');
 const { URL } = require('url');
 
-const DEFAULT_MAX_BYTES = 5 * 1024 * 1024; // 5 MB
-
-// small helper to sanitize strings (strip tags & trim)
+const DEFAULT_MAX_BYTES = 5 * 1024 * 1024; 
 function sanitizeText(input) {
   if (!input && input !== 0) return '';
   const str = String(input);

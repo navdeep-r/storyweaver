@@ -1,290 +1,3 @@
-// /**
-//  * server.js
-//  *
-//  * Hardened Express server for OPDS -> JSON API
-//  *
-//  * Protections & features:
-//  * - Rate limiting (express-rate-limit)
-//  * - CORS origin whitelist (ALLOWED_ORIGINS env)
-//  * - Compression and security headers (compression, helmet)
-//  * - Persistent cache: Redis if REDIS_URL present, otherwise local file cache
-//  * - Input validation and query param length limits
-//  * - Sanitized output of book fields
-//  *
-//  * Environment:
-//  * - OPDS_URL: the feed URL (default provided)
-//  * - OPDS_WHITELIST: comma-separated hostnames allowed for feed (optional)
-//  * - ALLOWED_ORIGINS: comma-separated allowed CORS origins (optional)
-//  * - CACHE_FILE: local cache file path fallback (default ./opds_cache.json)
-//  * - REDIS_URL: if provided, will use Redis for caching
-//  * - RATE_LIMIT_MAX: max requests per window (default 200)
-//  * - RATE_LIMIT_WINDOW_MS: window size ms (default 15*60*1000)
-//  */
-
-// const express = require('express');
-// const compression = require('compression');
-// const helmet = require('helmet');
-// const rateLimit = require('express-rate-limit');
-// const cors = require('cors');
-// const fs = require('fs/promises');
-// const path = require('path');
-// const Redis = require('ioredis'); // optional, used only if REDIS_URL set
-// const { parseFeed } = require('./opdsParser');
-// const sanitizeHtml = require('sanitize-html');
-
-// const app = express();
-
-// app.use(helmet());
-// app.use(compression());
-
-// // --- CORS config ---
-// const allowedOriginsEnv = process.env.ALLOWED_ORIGINS || 'http://localhost:3000';
-// const allowedOrigins = allowedOriginsEnv.split(',').map((s) => s.trim()).filter(Boolean);
-// app.use(cors({
-//   origin: function (origin, cb) {
-//     // allow non-browser requests (like curl) that have no origin
-//     if (!origin) return cb(null, true);
-//     if (allowedOrigins.includes(origin)) return cb(null, true);
-//     return cb(new Error('CORS policy: origin not allowed'));
-//   }
-// }));
-
-// // --- Rate limiter ---
-// const limiter = rateLimit({
-//   windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000),
-//   max: Number(process.env.RATE_LIMIT_MAX || 200),
-//   standardHeaders: true,
-//   legacyHeaders: false
-// });
-// app.use(limiter);
-
-// // --- Cache (Redis optional, fallback file) ---
-// const REDIS_URL = process.env.REDIS_URL || '';
-// const CACHE_FILE = process.env.CACHE_FILE || path.resolve(__dirname, 'opds_cache.json');
-// let redisClient = null;
-// let useRedis = false;
-
-// if (REDIS_URL) {
-//   try {
-//     redisClient = new Redis(REDIS_URL);
-//     useRedis = true;
-//     redisClient.on('error', (e) => console.error('Redis error', e && e.message ? e.message : e));
-//   } catch (err) {
-//     console.warn('Failed to init Redis, falling back to file cache', err && err.message ? err.message : err);
-//     useRedis = false;
-//   }
-// }
-
-// // in-memory last-known cache (fast read)
-// let inMemoryCache = {
-//   fetchedAt: 0,
-//   books: [],
-//   facets: { languages: {}, publishers: {}, authors: {}, readingLevels: {} }
-// };
-
-// // helper: persist to file (async)
-// async function persistToFileCache(obj) {
-//   try {
-//     await fs.writeFile(CACHE_FILE, JSON.stringify(obj), { encoding: 'utf8' });
-//   } catch (err) {
-//     console.warn('Failed to write cache file:', err && err.message ? err.message : err);
-//   }
-// }
-
-// // helper: read file cache
-// async function readFileCache() {
-//   try {
-//     const raw = await fs.readFile(CACHE_FILE, 'utf8');
-//     return JSON.parse(raw);
-//   } catch (err) {
-//     return null;
-//   }
-// }
-
-// // internal: get cache (from redis or file or in-memory)
-// async function getCacheObject() {
-//   if (useRedis && redisClient) {
-//     try {
-//       const raw = await redisClient.get('opds_cache_v1');
-//       if (raw) return JSON.parse(raw);
-//     } catch (err) {
-//       console.warn('Redis read failed', err && err.message ? err.message : err);
-//     }
-//   }
-
-//   // try file
-//   const fileCache = await readFileCache();
-//   if (fileCache) return fileCache;
-
-//   // fallback to in-memory
-//   return inMemoryCache;
-// }
-
-// // internal: set cache object
-// async function setCacheObject(obj) {
-//   inMemoryCache = obj;
-//   if (useRedis && redisClient) {
-//     try {
-//       await redisClient.set('opds_cache_v1', JSON.stringify(obj), 'EX', 60 * 60); // 1h TTL
-//     } catch (err) {
-//       console.warn('Redis write failed', err && err.message ? err.message : err);
-//     }
-//   }
-//   // also persist to file (best-effort)
-//   persistToFileCache(obj).catch(() => { });
-// }
-
-// // OPDS source
-// const OPDS_URL = process.env.OPDS_URL || 'https://storage.googleapis.com/story-weaver-e2e-production/catalog/english.xml';
-
-// // ensureParsed with caching and safe recompute
-// async function ensureParsed() {
-//   try {
-//     const cacheObj = await getCacheObject();
-//     const tenMinutes = Number(process.env.CACHE_TTL_MS || 1000 * 60 * 10);
-
-//     if (cacheObj && cacheObj.fetchedAt && (Date.now() - cacheObj.fetchedAt) < tenMinutes && Array.isArray(cacheObj.books) && cacheObj.books.length > 0) {
-//       // warm fast-return
-//       return cacheObj;
-//     }
-
-//     // parse fresh
-//     const parsed = await parseFeed(OPDS_URL, { retries: Number(process.env.OPDS_RETRIES || 2) });
-//     const books = Array.isArray(parsed.books) ? parsed.books : [];
-
-//     // compute facets
-//     const facets = { languages: {}, publishers: {}, authors: {}, readingLevels: {} };
-//     books.forEach((b) => {
-//       if (b.language) facets.languages[b.language] = (facets.languages[b.language] || 0) + 1;
-//       if (b.publisher) facets.publishers[b.publisher] = (facets.publishers[b.publisher] || 0) + 1;
-//       if (Array.isArray(b.authors)) b.authors.forEach((a) => { facets.authors[a] = (facets.authors[a] || 0) + 1; });
-//       if (b.readingLevel) facets.readingLevels[b.readingLevel] = (facets.readingLevels[b.readingLevel] || 0) + 1;
-//     });
-
-//     const newCache = { fetchedAt: Date.now(), books, facets };
-//     await setCacheObject(newCache);
-//     return newCache;
-//   } catch (err) {
-//     console.error('ensureParsed error:', err && err.message ? err.message : err);
-//     // fallback to existing in-memory cache (maybe empty)
-//     return inMemoryCache;
-//   }
-// }
-
-// // helper: safely parse list params (allow comma-separated values)
-// function parseListParam(v) {
-//   if (!v) return [];
-//   if (Array.isArray(v)) return v.flatMap((x) => String(x || '').split(',').map(s => s.trim()).filter(Boolean).map(s => s.toLowerCase()));
-//   return String(v).split(',').map((s) => s.trim()).filter(Boolean).map(s => s.toLowerCase());
-// }
-
-// function safeSanitizeForResponse(book) {
-//   // Only include safe fields (and sanitized text)
-//   return {
-//     id: book.id,
-//     opdsId: String(book.opdsId || ''),
-//     title: sanitizeHtml(String(book.title || ''), { allowedTags: [], allowedAttributes: {} }),
-//     authors: (book.authors || []).map(a => sanitizeHtml(String(a || ''), { allowedTags: [], allowedAttributes: {} })),
-//     language: sanitizeHtml(String(book.language || ''), { allowedTags: [], allowedAttributes: {} }),
-//     readingLevel: sanitizeHtml(String(book.readingLevel || ''), { allowedTags: [], allowedAttributes: {} }),
-//     publisher: sanitizeHtml(String(book.publisher || ''), { allowedTags: [], allowedAttributes: {} }),
-//     summary: sanitizeHtml(String(book.summary || ''), { allowedTags: [], allowedAttributes: {} }),
-//     coverUrl: book.coverUrl || '',
-//     thumbnailUrl: book.thumbnailUrl || '',
-//     acquisitions: Array.isArray(book.acquisitions) ? book.acquisitions.map(a => ({ href: a.href || '', type: a.type || '', rel: a.rel || '' })) : []
-//   };
-// }
-
-// // input validation middleware for /api/books (simple)
-// function validateBooksQuery(req, res, next) {
-//   const q = String(req.query.q || '');
-//   if (q.length > 200) return res.status(400).json({ error: 'Search query too long' });
-
-//   const perPage = Number(req.query.perPage || 50);
-//   if (!Number.isInteger(perPage) || perPage <= 0 || perPage > 200) return res.status(400).json({ error: 'Invalid perPage' });
-
-//   // optional: check page
-//   const page = Number(req.query.page || 1);
-//   if (!Number.isInteger(page) || page <= 0 || page > 10000) return res.status(400).json({ error: 'Invalid page' });
-
-//   next();
-// }
-
-// app.get('/api/books', validateBooksQuery, async (req, res) => {
-//   try {
-//     const page = Math.max(1, parseInt(req.query.page || '1', 10));
-//     const perPage = Math.min(parseInt(req.query.perPage || '50', 10), 200);
-
-//     const data = await ensureParsed();
-//     let filtered = Array.isArray(data.books) ? data.books.slice() : [];
-
-//     // parse query params safely (support language(s) or language param)
-//     const qLanguages = parseListParam(req.query.language || req.query.languages);
-//     const qReading = parseListParam(req.query.readingLevel || req.query.readingLevels);
-//     const qAuthors = parseListParam(req.query.author || req.query.authors);
-//     const qPublisher = parseListParam(req.query.publisher || req.query.publishers);
-//     const q = String(req.query.q || '').toLowerCase().trim();
-
-//     if (qLanguages.length) {
-//       filtered = filtered.filter(b => b.language && qLanguages.some(qv => b.language.toLowerCase().includes(qv)));
-//     }
-//     if (qReading.length) {
-//       filtered = filtered.filter(b => b.readingLevel && qReading.some(qv => b.readingLevel.toLowerCase().includes(qv)));
-//     }
-//     if (qAuthors.length) {
-//       filtered = filtered.filter(b => Array.isArray(b.authors) && b.authors.some(a => qAuthors.some(qv => String(a).toLowerCase().includes(qv))));
-//     }
-//     if (qPublisher.length) {
-//       filtered = filtered.filter(b => b.publisher && qPublisher.some(qv => b.publisher.toLowerCase().includes(qv)));
-//     }
-//     if (q) {
-//       filtered = filtered.filter(b =>
-//         (b.title && String(b.title).toLowerCase().includes(q)) ||
-//         (Array.isArray(b.authors) && b.authors.some(a => String(a).toLowerCase().includes(q))) ||
-//         (b.summary && String(b.summary).toLowerCase().includes(q))
-//       );
-//     }
-
-//     const total = filtered.length;
-//     const start = (page - 1) * perPage;
-//     const end = start + perPage;
-//     const pageBooks = filtered.slice(start, end).map(safeSanitizeForResponse);
-
-//     // return facets from cache (not filtered counts) — you can compute filtered facets if desired
-//     res.json({
-//       total,
-//       page,
-//       perPage,
-//       books: pageBooks,
-//       facets: data.facets || {}
-//     });
-//   } catch (err) {
-//     console.error('GET /api/books error', err && err.message ? err.message : err);
-//     res.status(500).json({ error: 'Failed to serve books' });
-//   }
-// });
-
-// app.get('/health', async (req, res) => {
-//   try {
-//     const data = await ensureParsed();
-//     res.json({ status: 'ok', cachedAt: data.fetchedAt || 0, count: Array.isArray(data.books) ? data.books.length : 0 });
-//   } catch (err) {
-//     res.status(500).json({ status: 'error', message: 'health check failed' });
-//   }
-// });
-
-// const PORT = Number(process.env.PORT || 5000);
-// app.listen(PORT, () => console.log(`backend server running on ${PORT}`));
-
-
-/**
- * server.js
- *
- * Hardened Express server for OPDS -> JSON API
- *
- * (Modified to implement Option A: main catalog provides languages list; no language => empty books)
- */
-
 const express = require('express');
 const compression = require('compression');
 const helmet = require('helmet');
@@ -292,7 +5,7 @@ const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 const fs = require('fs/promises');
 const path = require('path');
-const Redis = require('ioredis'); // optional, used only if REDIS_URL set
+const Redis = require('ioredis');
 const { parseFeed } = require('./opdsParser');
 const sanitizeHtml = require('sanitize-html');
 
@@ -301,7 +14,6 @@ const app = express();
 app.use(helmet());
 app.use(compression());
 
-// --- CORS config ---
 const allowedOriginsEnv = 'http://localhost:5173';
 const allowedOrigins = allowedOriginsEnv.split(',').map((s) => s.trim()).filter(Boolean);
 app.use(cors({
@@ -322,7 +34,6 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// --- Cache (Redis optional, fallback file) ---
 const REDIS_URL = /*process.env.REDIS_URL || */'';
 const CACHE_FILE = /*process.env.CACHE_FILE || */path.resolve(__dirname, 'opds_cache.json');
 let redisClient = null;
@@ -339,12 +50,7 @@ if (REDIS_URL) {
   }
 }
 
-// in-memory last-known cache (fast read)
-// Structure:
-// {
-//   main: { fetchedAt: 0, languages: { "<LanguageTitle>": { href: "https://...", title: "English" }, ... } },
-//   languages: { "<LanguageTitle>": { fetchedAt: 0, books: [], facets: { authors:{}, publishers:{}, readingLevels:{} } }, ... }
-// }
+
 let inMemoryCache = {
   main: { fetchedAt: 0, languages: {} },
   languages: {}
@@ -547,10 +253,14 @@ async function ensureParsed(language) {
 
     // If no language requested -> empty books; return languages list in facets
     if (!language) {
-      // build languages facets object with counts = 0 (cheap)
+      // build languages facets object using cached per-language counts when available
+      const cacheObj = await getCacheObject();
       const languagesFacet = {};
       Object.keys(main.languages || {}).forEach((k) => {
-        languagesFacet[k] = 0;
+        const len = cacheObj && cacheObj.languages && cacheObj.languages[k] && Array.isArray(cacheObj.languages[k].books)
+          ? cacheObj.languages[k].books.length
+          : 0;
+        languagesFacet[k] = len;
       });
 
       return {
@@ -568,12 +278,21 @@ async function ensureParsed(language) {
     // language was provided -> fetch language feed (or use cache)
     const langKey = String(language).trim();
     if (!langKey) {
-      // treat as no-language
+      // treat as no-language — return languages with cached counts if present
+      const cacheObj = await getCacheObject();
+      const languagesFacet = {};
+      Object.keys(main.languages || {}).forEach((k) => {
+        const len = cacheObj && cacheObj.languages && cacheObj.languages[k] && Array.isArray(cacheObj.languages[k].books)
+          ? cacheObj.languages[k].books.length
+          : 0;
+        languagesFacet[k] = len;
+      });
+
       return {
         fetchedAt: main.fetchedAt || 0,
         books: [],
         facets: {
-          languages: Object.keys(main.languages || {}).reduce((acc, k) => { acc[k] = 0; return acc; }, {}),
+          languages: languagesFacet,
           publishers: {},
           authors: {},
           readingLevels: {}
@@ -607,11 +326,19 @@ async function ensureParsed(language) {
     // fallback to empty response (do not throw)
     const cacheObj = await getCacheObject();
     const mainLangs = (cacheObj.main && cacheObj.main.languages) || {};
+    const languagesFacet = {};
+    Object.keys(mainLangs).forEach((k) => {
+      const len = cacheObj && cacheObj.languages && cacheObj.languages[k] && Array.isArray(cacheObj.languages[k].books)
+        ? cacheObj.languages[k].books.length
+        : 0;
+      languagesFacet[k] = len;
+    });
+
     return {
       fetchedAt: cacheObj.main?.fetchedAt || 0,
       books: [],
       facets: {
-        languages: Object.keys(mainLangs).reduce((acc, k) => { acc[k] = 0; return acc; }, {}),
+        languages: languagesFacet,
         publishers: {},
         authors: {},
         readingLevels: {}
