@@ -1,9 +1,8 @@
 // Small frontend wrapper for backend API calls
-// const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5000';
-const API_BASE = 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export async function fetchBooks(params = {}) {
-  const url = new URL(`${API_BASE}/api/books`);
+  const url = new URL(`${API_URL}/api/books`);
   Object.keys(params).forEach(k => {
     const v = params[k];
     if (v !== undefined && v !== null && v !== '') url.searchParams.set(k, v);
@@ -17,7 +16,7 @@ export async function fetchBooks(params = {}) {
 }
 
 export async function health() {
-  const res = await fetch(`${API_BASE}/health`);
+  const res = await fetch(`${API_URL}/health`);
   if (!res.ok) throw new Error('health check failed');
   return res.json();
 }

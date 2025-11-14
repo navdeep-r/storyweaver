@@ -97,7 +97,6 @@ function normalizeEntry(entry = {}, idx = 0) {
 
   const summary = toText(entry.summary || entry.content || '');
 
-  // links
   let coverUrl = '';
   let thumbnailUrl = '';
   const acquisitions = [];
