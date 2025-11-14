@@ -30,9 +30,9 @@ const BookCard = ({ book }) => {
       exit={{ opacity: 0, y: -20 }}
       whileHover={{ y: -8, scale: 1.02 }}
       transition={{ duration: 0.2 }}
-      className="group bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300"
+      className="group bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full"
     >
-      <div className="relative aspect-[3/4] overflow-hidden">
+      <div className="relative aspect-3/4 overflow-hidden">
         {book.coverUrl ? (
           <img
             src={book.coverUrl}
@@ -69,17 +69,18 @@ const BookCard = ({ book }) => {
         </div>
       </div>
 
-      <div className="p-4">
+      <div className="p-4 flex flex-col grow">
         <h3 className="font-bold text-slate-800 dark:text-slate-100 line-clamp-2" title={book.title}>{book.title}</h3>
 
         {firstAuthorName ? (
-          <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">by {firstAuthorName}</p>
+          <p className="text-sm text-slate-600 dark:txext-slate-300 mt-1">by {firstAuthorName}</p>
         ) : (
           <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">by Unknown author</p>
         )}
+        <div className="h-2" />
 
         {/* Smart Tags */}
-        <div className="mt-2 flex flex-wrap gap-1">
+        {/* <div className="mt-2 flex flex-wrap gap-1">
           {book.language && (
             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100">
               {book.language}
@@ -95,9 +96,9 @@ const BookCard = ({ book }) => {
               {book.publisher}
             </span>
           )}
-        </div>
+        </div> */}
 
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-auto flex flex-wrap gap-2">
           {formats.map((format, index) => (
             <button
               key={`${book.id}-${index}`}

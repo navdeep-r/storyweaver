@@ -24,7 +24,7 @@ const FilterSection = ({
   getItemValue,
   getItemLabel
 }) => {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(title === "Languages");
 
   // Handle filter item click
   const handleItemClick = useCallback(

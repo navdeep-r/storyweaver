@@ -95,7 +95,7 @@ function normalizeEntry(entry = {}, idx = 0) {
     }
   });
 
-  const publisher = toText(entry['dc:publisher'] || entry.publisher);
+  const publisher = toText(entry['dcterms:publisher'] || entry.publisher);
 
   const summary = toText(entry.summary || entry.content || '');
 

@@ -66,7 +66,7 @@ const BookGrid = () => {
   const displayBooks = books || [];
 
   return (
-    <div>
+    <div className='pb-12'>
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold text-slate-800">
           Books <span className="text-slate-500 text-base font-normal">({total})</span>
