@@ -1,5 +1,5 @@
 // Small frontend wrapper for backend API calls
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = 'https://storyweaver-9b0g.onrender.com';
 
 export async function fetchBooks(params = {}) {
   const url = new URL(`${API_URL}/api/books`);
