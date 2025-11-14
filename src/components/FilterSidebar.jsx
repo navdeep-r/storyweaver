@@ -6,23 +6,10 @@ const FiltersSidebar = () => {
   const { filters, facets, selectedFilters, setSelectedFilters } = useAppContext();
 
   const handleToggle = (category, value, add) => {
-    // 🔹 1. SINGLE-SELECT LANGUAGE FILTER
-    if (category === "languages") {
-      setSelectedFilters((prev) => {
-        const newLanguage = add ? value : undefined; // add=false means deselect
+    // 🔹 REMOVED: SINGLE-SELECT LANGUAGE FILTER
+    // Language filter has been moved to a dedicated page
 
-        return {
-          language: newLanguage,  // set or clear
-          authors: [],
-          publishers: [],
-          categories: [],
-          search: undefined
-        };
-      });
-      return;
-    }
-
-    // 🔹 2. MULTI-SELECT BEHAVIOR FOR OTHER FILTERS
+    // 🔹 MULTI-SELECT BEHAVIOR FOR OTHER FILTERS
     setSelectedFilters((prev) => {
       const current = prev?.[category] || [];
       const updated = add
@@ -33,16 +20,15 @@ const FiltersSidebar = () => {
     });
   };
 
-  // Normalize key mapping
+  // Normalize key mapping (removed languages)
   const keyMap = {
-    languages: "languages",
     authors: "authors",
     publishers: "publishers",
     categories: "categories",
   };
 
+  // Filter configuration (removed languages)
   const filterConfig = [
-    { key: "languages", title: "Languages" },
     { key: "authors", title: "Authors" },
     { key: "publishers", title: "Publishers" },
     { key: "categories", title: "Categories" },
@@ -63,10 +49,7 @@ const FiltersSidebar = () => {
         // Convert simple array to object format for display
         const formattedItems = Array.isArray(items) ? items.map(item => ({ name: item, id: item })) : [];
         const facet = facets?.[key] || {};
-        const selectedValues =
-          key === "languages"
-            ? selectedFilters.language ? [selectedFilters.language] : []
-            : selectedFilters?.[key] || [];
+        const selectedValues = selectedFilters?.[key] || [];
 
         // Debugging helper (only logs in dev)
         if (process.env.NODE_ENV === "development") {

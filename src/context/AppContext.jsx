@@ -184,15 +184,25 @@ export const AppProvider = ({ children }) => {
 
   // 🎨 Theme Handling (Framer Motion–Ready)
   const setTheme = (theme) => {
-    document.documentElement.classList.remove("dark", "sepia");
-    if (theme === "dark") document.documentElement.classList.add("dark");
-    if (theme === "sepia") document.documentElement.classList.add("sepia");
+    // Remove all theme classes first
+    document.documentElement.classList.remove("light", "dark", "sepia");
+    
+    // Add the selected theme class
+    document.documentElement.classList.add(theme);
+    
+    // Store theme preference in localStorage
     localStorage.setItem("theme", theme);
+    
+    // Update state
     dispatch({ type: ACTIONS.SET_THEME, payload: theme });
+    
+    // Trigger animation
     dispatch({
       type: ACTIONS.TRIGGER_ANIMATION,
       payload: { animateFilters: true },
     });
+    
+    // Reset animation after delay
     setTimeout(
       () => dispatch({ type: ACTIONS.TRIGGER_ANIMATION, payload: { animateFilters: false } }),
       800

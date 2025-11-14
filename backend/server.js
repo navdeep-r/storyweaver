@@ -28,6 +28,7 @@ app.use(cors({
   }
 }));
 
+
 // --- Rate limiter ---
 const limiter = rateLimit({
   windowMs: Number(/*process.env.RATE_LIMIT_WINDOW_MS ||*/ 15 * 60 * 1000),
@@ -255,7 +256,6 @@ async function ensureParsed(language) {
     const tenMinutes = CACHE_TTL_MS;
     
 
-    // If no language requested -> empty books; return languages list in facets
     if (!language) {
       // build languages facets object using cached per-language counts when available
       const cacheObj = await getCacheObject();

@@ -1,10 +1,52 @@
-/* Custom styles only — no Tailwind imports */
-
-body {
-  background-color: #f8fafc;
+:root {
+  --bg-primary: #13314f;
+  --bg-secondary: #163d65;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --border-color: #cbd5e1;
+  --shadow-color: rgba(0, 0, 0, 0.05);
+  --accent: #ffffff;
+  --transition-fast: 150ms ease-in;
+  --transition: 300ms ease-in; 
 }
 
-/* Line clamp utility */
+.dark {
+  --bg-primary: #020617;
+  --bg-secondary: #0f172a;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --border-color: #1e293b;
+  --shadow-color: rgba(0, 0, 0, 0.5);
+  --accent: #ffffff;
+}
+
+.sepia {
+  --bg-primary: #544d3b;
+  --bg-secondary: #f0e9db;
+  --text-primary: #3a2f2a;
+  --text-secondary: #6b5b4f;
+  --border-color: #d4c7b0;
+  --shadow-color: rgba(107, 91, 79, 0.15);
+  --accent: #b08968;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color var(--transition), color var(--transition);
+}
+
+a,
+button {
+  color: var(--accent);
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+}
+
+button:hover,
+a:hover {
+  opacity: 0.85;
+}
+
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -12,20 +54,22 @@ body {
   overflow: hidden;
 }
 
-/* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: var(--bg-secondary);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--border-color);
   border-radius: 4px;
+  transition: background-color var(--transition-fast);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: var(--text-secondary);
 }
+
+

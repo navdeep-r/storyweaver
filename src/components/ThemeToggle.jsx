@@ -11,69 +11,91 @@ const ThemeToggle = () => {
     setMounted(true);
   }, []);
 
-  const handleToggle = () => {
-    const themeOrder = ['light', 'dark', 'sepia'];
-    const currentIndex = themeOrder.indexOf(theme);
-    const nextIndex = (currentIndex + 1) % themeOrder.length;
-    setTheme(themeOrder[nextIndex]);
+  // Completely rewritten theme toggle logic
+  const cycleTheme = () => {
+    // Define the theme cycle order
+    const themes = ['light', 'dark', 'sepia'];
+    
+    // Find current theme index
+    const currentIndex = themes.indexOf(theme);
+    
+    // Calculate next theme index (cycle back to 0 if at end)
+    const nextIndex = (currentIndex + 1) % themes.length;
+    
+    // Apply the new theme
+    const nextTheme = themes[nextIndex];
+    setTheme(nextTheme);
   };
 
-  const getIcon = () => {
+  // Completely rewritten icon rendering logic
+  const renderThemeIcon = () => {
+    // Show a default icon while component is mounting to prevent hydration issues
     if (!mounted) {
-      // ❗ Return ONLY an icon, no buttons inside
       return <MoonIcon className="h-5 w-5 text-slate-600" />;
     }
 
+    // Render appropriate icon based on current theme
     switch (theme) {
       case 'dark':
         return <SunIcon className="h-5 w-5 text-yellow-400" />;
-
       case 'sepia':
+        // Custom SVG for sepia theme
         return (
-          <svg
-            className="h-5 w-5 text-amber-600"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-          >
-            <path
-              fillRule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-              clipRule="evenodd"
+          <svg className="h-5 w-5 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+            <path 
+              fillRule="evenodd" 
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" 
+              clipRule="evenodd" 
             />
           </svg>
         );
-
-      default:
-        return <MoonIcon className="h-5 w-5 text-slate-600 dark:text-slate-200" />;
+      default: // light theme
+        return <MoonIcon className="h-5 w-5 text-slate-600" />;
     }
   };
 
-  const getLabel = () => {
+  // Completely rewritten aria label logic
+  const getAriaLabel = () => {
     switch (theme) {
-      case 'dark': return 'Switch to Sepia';
-      case 'sepia': return 'Switch to Light';
-      default: return 'Switch to Dark';
+      case 'light':
+        return 'Switch to dark theme';
+      case 'dark':
+        return 'Switch to sepia theme';
+      case 'sepia':
+        return 'Switch to light theme';
+      default:
+        return 'Switch theme';
+    }
+  };
+
+  // Completely rewritten button styling logic
+  const getButtonClasses = () => {
+    const baseClasses = "p-2 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500";
+    
+    switch (theme) {
+      case 'dark':
+        return `${baseClasses} bg-slate-700 hover:bg-slate-600 text-slate-100 focus:ring-offset-slate-900`;
+      case 'sepia':
+        return `${baseClasses} bg-amber-100 hover:bg-amber-200 text-amber-900 focus:ring-offset-amber-50`;
+      default: // light
+        return `${baseClasses} bg-slate-200 hover:bg-slate-300 text-slate-700 focus:ring-offset-white`;
     }
   };
 
   return (
     <button
-      onClick={handleToggle}
-      aria-label={getLabel()}
-      title={getLabel()}
-      className={`p-2 rounded-full transition-colors ${theme === 'sepia'
-        ? 'bg-amber-100 hover:bg-amber-200'
-        : 'bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600'
-        }`}
+      onClick={cycleTheme}
+      aria-label={getAriaLabel()}
+      title={getAriaLabel()}
+      className={getButtonClasses()}
     >
       <motion.div
-        key={theme}
-        initial={{ opacity: 0, scale: 0.8, rotate: -90 }}
-        animate={{ opacity: 1, scale: 1, rotate: 0 }}
-        exit={{ opacity: 0, scale: 0.8, rotate: 90 }}
+        key={theme} // Use theme as key to trigger animation on change
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.2 }}
       >
-        {getIcon()}
+        {renderThemeIcon()}
       </motion.div>
     </button>
   );
