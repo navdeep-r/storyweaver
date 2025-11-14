@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import FilterSection from "./FilterSection";
+import CheckboxFilterSection from "./CheckboxFilterSection";
 import { useAppContext } from "../context/AppContext";
 
 const FiltersSidebar = () => {
@@ -39,7 +39,7 @@ const FiltersSidebar = () => {
       initial={{ x: -10, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="w-full md:w-72 p-4 bg-white dark:bg-slate-900 rounded-xl shadow-md overflow-y-auto max-h-[80vh]"
+      className="w-full p-4 bg-white dark:bg-slate-900 rounded-xl shadow-md overflow-y-auto max-h-[70vh] sm:max-h-[80vh]"
     >
       <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-3">Filters</h2>
 
@@ -57,7 +57,7 @@ const FiltersSidebar = () => {
         }
 
         return (
-          <FilterSection
+          <CheckboxFilterSection
             key={key}
             title={title}
             items={formattedItems}

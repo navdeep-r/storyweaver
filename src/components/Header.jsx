@@ -47,17 +47,17 @@ const Header = () => {
 
   return (
     <header className="bg-white/80 dark:bg-slate-900/80 sepia:bg-sepia-50/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-700 sepia:border-sepia-300 sticky top-0 z-10">
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="container mx-auto px-4 py-3 sm:py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div className="flex items-center justify-between">
             <motion.h1
               initial={{ x: -20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              className="text-2xl font-bold bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+              className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400"
             >
               StoryWeaver Library
             </motion.h1>
-            <div className="md:hidden relative">
+            <div className="sm:hidden relative">
               <span className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                 {cart.length}
               </span>
@@ -80,7 +80,7 @@ const Header = () => {
                 onFocus={() => setIsSearchFocused(true)}
                 onBlur={() => setIsSearchFocused(false)}
                 placeholder="Search books, authors, categories..."
-                className="block w-full pl-10 pr-12 py-3 border border-slate-300 dark:border-slate-600 sepia:border-sepia-400 rounded-xl bg-white dark:bg-slate-800 sepia:bg-sepia-100 text-slate-900 dark:text-slate-100 sepia:text-sepia-900 placeholder-slate-500 dark:placeholder-slate-400 sepia:placeholder-sepia-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                className="block w-full pl-10 pr-12 py-2 sm:py-3 border border-slate-300 dark:border-slate-600 sepia:border-sepia-400 rounded-lg sm:rounded-xl bg-white dark:bg-slate-800 sepia:bg-sepia-100 text-slate-900 dark:text-slate-100 sepia:text-sepia-900 placeholder-slate-500 dark:placeholder-slate-400 sepia:placeholder-sepia-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm sm:text-base"
               />
               <AnimatePresence>
                 {searchTerm && (
@@ -101,12 +101,12 @@ const Header = () => {
             </motion.div>
           </form>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3 sm:space-x-4">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={toggleCustomFields}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${showCustomFields
+              className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 ${showCustomFields
                 ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/25'
                 : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600'
                 }`}
@@ -114,7 +114,7 @@ const Header = () => {
               {showCustomFields ? 'Hide Custom Fields' : 'Show Custom Fields'}
             </motion.button>
 
-            <div className="hidden md:flex items-center relative">
+            <div className="hidden sm:flex items-center relative">
               <motion.span
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}

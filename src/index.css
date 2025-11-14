@@ -14,7 +14,7 @@ body {
 :root,
 html,
 body {
-  transition: background-color 240ms ease, color 240ms ease;
+  transition: background-color 300ms ease, color 300ms ease;
 }
 
 /* Custom thin scrollbar for modern browsers */

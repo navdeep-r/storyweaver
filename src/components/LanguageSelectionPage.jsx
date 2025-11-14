@@ -26,14 +26,14 @@ const LanguageSelectionPage = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="max-w-2xl w-full bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8"
+        className="w-full max-w-md sm:max-w-2xl bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-6 sm:p-8"
       >
-        <div className="text-center mb-8">
+        <div className="text-center mb-6 sm:mb-8">
           <motion.h1
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="text-3xl font-bold text-slate-900 dark:text-white mb-2"
+            className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-2"
           >
             Select Your Preferred Language
           </motion.h1>
@@ -41,13 +41,13 @@ const LanguageSelectionPage = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="text-slate-600 dark:text-slate-300"
+            className="text-slate-600 dark:text-slate-300 text-sm sm:text-base"
           >
             Choose a language to browse books in your preferred language
           </motion.p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
           {availableLanguages.map((language, index) => (
             <motion.button
               key={language}
@@ -57,19 +57,19 @@ const LanguageSelectionPage = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => handleLanguageSelect(language)}
-              className={`p-4 rounded-xl border-2 transition-all duration-200 ${
+              className={`p-3 sm:p-4 rounded-xl border-2 transition-all duration-200 ${
                 selectedLanguage === language
                   ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
                   : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-slate-700 dark:text-slate-300'
               }`}
             >
-              <span className="font-medium">{language}</span>
+              <span className="font-medium text-sm sm:text-base">{language}</span>
             </motion.button>
           ))}
           
           {availableLanguages.length === 0 && (
-            <div className="col-span-full text-center py-8">
-              <p className="text-slate-500 dark:text-slate-400">
+            <div className="col-span-full text-center py-6 sm:py-8">
+              <p className="text-slate-500 dark:text-slate-400 text-sm sm:text-base">
                 No languages available at the moment
               </p>
             </div>
@@ -80,7 +80,7 @@ const LanguageSelectionPage = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="mt-8 text-center"
+          className="mt-6 sm:mt-8 text-center"
         >
           <button
             onClick={() => navigate('/browse')}

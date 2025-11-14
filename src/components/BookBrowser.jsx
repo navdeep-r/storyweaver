@@ -10,26 +10,28 @@ const BookBrowser = () => {
   const { loading, error } = useAppContext();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
       <Header />
-
-      <div className="container mx-auto px-4 py-8">
+      
+      <div className="container mx-auto px-4 py-6 sm:py-8">
         {loading && <LoadingSpinner />}
         {error && <ErrorMessage message={error} />}
-
+        
         {!loading && !error && (
-          <div className="flex flex-col lg:flex-row gap-8">
+          <div className="flex flex-col lg:flex-row gap-6 sm:gap-8">
+            {/* Filter sidebar - hidden on mobile by default, shown when needed */}
             <div className="w-full lg:w-1/4">
               <FilterSidebar />
             </div>
-
+            
+            {/* Main content area */}
             <div className="w-full lg:w-3/4">
               <BookGrid />
             </div>
           </div>
         )}
       </div>
-
+      
       <CartPanel />
     </div>
   );

@@ -1,33 +1,37 @@
 :root {
-  --bg-primary: #13314f;
-  --bg-secondary: #163d65;
+  /* Light theme colors */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
   --text-primary: #1e293b;
   --text-secondary: #64748b;
   --border-color: #cbd5e1;
   --shadow-color: rgba(0, 0, 0, 0.05);
-  --accent: #ffffff;
+  --accent: #ffffff; /* Professional blue */
+  --accent-hover: #0b0000;
   --transition-fast: 150ms ease-in;
-  --transition: 300ms ease-in; 
+  --transition: 300ms ease-in;
 }
 
 .dark {
-  --bg-primary: #020617;
-  --bg-secondary: #0f172a;
-  --text-primary: #f8fafc;
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --text-primary: #f1f5f9;
   --text-secondary: #94a3b8;
-  --border-color: #1e293b;
+  --border-color: #334155;
   --shadow-color: rgba(0, 0, 0, 0.5);
-  --accent: #ffffff;
+  --accent: #60a5fa; /* Lighter blue for dark theme */
+  --accent-hover: #93c5fd;
 }
 
 .sepia {
-  --bg-primary: #544d3b;
-  --bg-secondary: #f0e9db;
-  --text-primary: #3a2f2a;
-  --text-secondary: #6b5b4f;
+  --bg-primary: #f5f1e6;
+  --bg-secondary: #e8e2d3;
+  --text-primary: #5c4330;
+  --text-secondary: #7a624d;
   --border-color: #d4c7b0;
   --shadow-color: rgba(107, 91, 79, 0.15);
-  --accent: #b08968;
+  --accent: #8b5a2b; /* Sepia brown */
+  --accent-hover: #6b4423;
 }
 
 body {
@@ -44,7 +48,7 @@ button {
 
 button:hover,
 a:hover {
-  opacity: 0.85;
+  color: var(--accent-hover);
 }
 
 .line-clamp-2 {
@@ -71,5 +75,3 @@ a:hover {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-secondary);
 }
-
-

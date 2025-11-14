@@ -64,7 +64,8 @@ const BookCard = ({ book }) => {
             className="bg-white/90 backdrop-blur-sm text-slate-800 px-2 py-1 rounded font-medium flex items-center space-x-1 shadow text-xs"
           >
             <EyeIcon className="w-2.5 h-2.5" />
-            <span>View</span>
+            <span className="hidden xs:inline">View</span>
+            <span className="xs:hidden">View</span>
           </motion.button>
         </div>
       </div>

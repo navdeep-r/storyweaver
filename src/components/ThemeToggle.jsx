@@ -41,7 +41,7 @@ const ThemeToggle = () => {
       case 'sepia':
         // Custom SVG for sepia theme
         return (
-          <svg className="h-5 w-5 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+          <svg className="h-5 w-5 text-amber-700" fill="currentColor" viewBox="0 0 20 20">
             <path 
               fillRule="evenodd" 
               d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" 
@@ -70,15 +70,15 @@ const ThemeToggle = () => {
 
   // Completely rewritten button styling logic
   const getButtonClasses = () => {
-    const baseClasses = "p-2 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500";
+    const baseClasses = "p-2 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2";
     
     switch (theme) {
       case 'dark':
-        return `${baseClasses} bg-slate-700 hover:bg-slate-600 text-slate-100 focus:ring-offset-slate-900`;
+        return `${baseClasses} bg-slate-700 hover:bg-slate-600 text-slate-100 focus:ring-offset-slate-900 focus:ring-slate-500`;
       case 'sepia':
-        return `${baseClasses} bg-amber-100 hover:bg-amber-200 text-amber-900 focus:ring-offset-amber-50`;
+        return `${baseClasses} bg-amber-100 hover:bg-amber-200 text-amber-900 focus:ring-offset-amber-50 focus:ring-amber-300`;
       default: // light
-        return `${baseClasses} bg-slate-200 hover:bg-slate-300 text-slate-700 focus:ring-offset-white`;
+        return `${baseClasses} bg-slate-200 hover:bg-slate-300 text-slate-700 focus:ring-offset-white focus:ring-slate-400`;
     }
   };
 
