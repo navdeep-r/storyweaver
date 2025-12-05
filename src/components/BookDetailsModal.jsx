@@ -56,13 +56,25 @@ const BookDetailsModal = ({ book, isOpen, onClose }) => {
 
           {/* Modal */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 50 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 50 }}
-            transition={{ type: 'spring', duration: 0.4 }}
-            className="fixed -bottom-8 -right-8 w-[95vw] md:w-[850px] h-[62vh] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl z-999 overflow-hidden flex flex-col"
-          // className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:transform md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-4xl md:max-h-[90vh] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl z-50 overflow-hidden"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ type: "spring", duration: 0.35 }}
+
+            className="
+              fixed 
+              top-1/2 left-1/2 
+              -translate-x-1/2 -translate-y-1/2
+              w-[95vw] md:w-[850px] 
+              max-h-[85vh]
+              bg-white dark:bg-slate-900 
+              rounded-2xl shadow-2xl 
+              z-[999] 
+              overflow-hidden 
+              flex flex-col
+            "
           >
+
             <div className="flex flex-col md:flex-row h-full">
               {/* Book Cover Section */}
               <div className="md:w-1/3 bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700 p-6 flex items-center justify-center">

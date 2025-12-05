@@ -88,7 +88,7 @@ const BookGrid = () => {
       </motion.div>
 
       <div className="mt-6">
-        <PaginationControls page={page} perPage={perPage} total={total} onPage={setPage} />
+        <PaginationControls page={page} perPage={perPage} total={total} onPage={setPage} onAddAll={addAll} />
       </div>
     </div>
   );

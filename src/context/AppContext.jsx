@@ -224,13 +224,14 @@ export const AppProvider = ({ children }) => {
         params.categories = filters.categories.join(',');
       }
       if (filters?.search) params.q = filters.search.trim();
-      console.log("➡️ rel:calling backend with params:", params);
+      // console.log("➡️ rel:calling backend with params:", params);
 
       const json = await backendApi.fetchBooks(params, {
         signal: controller.current.signal,
       });
 
-      console.log("✅ rel:backend returned:", json.books.length, "books");
+      // console.log("✅ rel:backend returned:", json.books.length, "books");
+      // console.log("end returned:", json);
 
 
       dispatch({ type: ACTIONS.SET_BOOKS, payload: json.books || [] });
@@ -291,7 +292,7 @@ export const AppProvider = ({ children }) => {
   // 🧠 Filter Auto-Apply
   const prevFilters = useRef();
   useEffect(() => {
-    console.log("rel: selectedFilters", state.selectedFilters);
+    // console.log("rel: selectedFilters", state.selectedFilters);
     // if (
     //   JSON.stringify(prevFilters.current) ===
     //   JSON.stringify(state.selectedFilters)

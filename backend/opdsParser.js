@@ -69,11 +69,12 @@ function normalizeEntry(entry = {}, idx = 0) {
 
   // authors
   const authors = toArray(entry.author)
-    .map((a) => {
-      if (!a) return '';
-      // a may be object with name or plain text
-      return sanitizeText(a?.name || a?.['#text'] || a);
-    })
+    .map((a) => sanitizeText(a?.name || a?.['#text'] || a))
+    .filter(Boolean);
+
+  // contributors (illustrators)
+  const contributors = toArray(entry.contributor)
+    .map((c) => sanitizeText(c?.name || c?.['#text'] || c))
     .filter(Boolean);
 
   // categories -> language, readingLevel
@@ -122,11 +123,21 @@ function normalizeEntry(entry = {}, idx = 0) {
     }
   });
 
+
+  // extract all categories (labels or terms)
+  const categories = toArray(entry.category)
+    .map(cat => sanitizeText(cat?.['@_label'] || cat?.['@_term'] || ''))
+    .filter(Boolean);
+
+  // console.log("DEBUG categories:", categories, "authors:", authors, "title:", title);
+
   return {
     id: idx + 1,
     opdsId: sanitizeText(entry.id || entry['id'] || ''),
     title,
     authors,
+    contributors,
+    categories,
     language,
     readingLevel,
     publisher,

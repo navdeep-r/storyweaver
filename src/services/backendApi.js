@@ -13,6 +13,7 @@ export async function fetchBooks(params = {}) {
     const text = await res.text();
     throw new Error(`Failed to fetch books: ${res.status} ${text}`);
   }
+  // console.log(await res.json())
   return res.json();
 }
 

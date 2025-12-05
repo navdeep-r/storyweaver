@@ -32,7 +32,7 @@ const BookCard = ({ book }) => {
       transition={{ duration: 0.2 }}
       className="group bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full"
     >
-      <div className="relative aspect-3/4 overflow-hidden">
+      <div className="relative aspect-square overflow-hidden">
         {book.coverUrl ? (
           <img
             src={book.coverUrl}
@@ -64,7 +64,7 @@ const BookCard = ({ book }) => {
             className="bg-white/90 backdrop-blur-sm text-slate-800 px-4 py-2 rounded-lg font-medium flex items-center space-x-2 shadow-lg"
           >
             <EyeIcon className="w-4 h-4" />
-            <span>View Details</span>
+            <span className='text-2x1'>View Details</span>
           </motion.button>
         </div>
       </div>
@@ -73,9 +73,9 @@ const BookCard = ({ book }) => {
         <h3 className="font-bold text-slate-800 dark:text-slate-100 line-clamp-2" title={book.title}>{book.title}</h3>
 
         {firstAuthorName ? (
-          <p className="text-sm text-slate-600 dark:txext-slate-300 mt-1">by {firstAuthorName}</p>
+          <p className="text-xs text-slate-600 dark:txext-slate-300 mt-1">by {firstAuthorName}</p>
         ) : (
-          <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">by Unknown author</p>
+          <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">by Unknown author</p>
         )}
         <div className="h-2" />
 

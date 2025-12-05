@@ -294,6 +294,7 @@ const fs = require('fs/promises');
 const path = require('path');
 const Redis = require('ioredis'); // optional, used only if REDIS_URL set
 const { parseFeed } = require('./opdsParser');
+// console.log("USING OPDS PARSER FROM:", require.resolve('./opdsParser'));
 const sanitizeHtml = require('sanitize-html');
 
 const app = express();
@@ -487,12 +488,16 @@ async function parseLanguageFeed(languageTitle) {
     const books = Array.isArray(parsed.books) ? parsed.books : [];
 
     // compute facets for this language feed
-    const facets = { languages: {}, publishers: {}, authors: {}, readingLevels: {} };
+    const facets = { languages: {}, publishers: {}, authors: {}, readingLevels: {}, categories: {} };
     books.forEach((b) => {
       if (b.language) facets.languages[b.language] = (facets.languages[b.language] || 0) + 1;
       if (b.publisher) facets.publishers[b.publisher] = (facets.publishers[b.publisher] || 0) + 1;
       if (Array.isArray(b.authors)) b.authors.forEach((a) => { facets.authors[a] = (facets.authors[a] || 0) + 1; });
       if (b.readingLevel) facets.readingLevels[b.readingLevel] = (facets.readingLevels[b.readingLevel] || 0) + 1;
+      if (Array.isArray(b.categories))
+        b.categories.forEach((c) => {
+          facets.categories[c] = (facets.categories[c] || 0) + 1;
+        });
     });
 
     // create language cache object
@@ -519,21 +524,42 @@ function parseListParam(v) {
 }
 
 function safeSanitizeForResponse(book) {
-  // Only include safe fields (and sanitized text)
   return {
     id: book.id,
     opdsId: String(book.opdsId || ''),
     title: sanitizeHtml(String(book.title || ''), { allowedTags: [], allowedAttributes: {} }),
-    authors: (book.authors || []).map(a => sanitizeHtml(String(a || ''), { allowedTags: [], allowedAttributes: {} })),
+
+    authors: (book.authors || []).map(a =>
+      sanitizeHtml(String(a || ''), { allowedTags: [], allowedAttributes: {} })
+    ),
+
+    contributors: (book.contributors || []).map(c =>
+      sanitizeHtml(String(c || ''), { allowedTags: [], allowedAttributes: {} })
+    ),
+
+    // extract all categories (labels or terms)
+    categories: (book.categories || []).map(c =>
+      sanitizeHtml(String(c || ''), { allowedTags: [], allowedAttributes: {} })
+    ),
+
     language: sanitizeHtml(String(book.language || ''), { allowedTags: [], allowedAttributes: {} }),
     readingLevel: sanitizeHtml(String(book.readingLevel || ''), { allowedTags: [], allowedAttributes: {} }),
     publisher: sanitizeHtml(String(book.publisher || ''), { allowedTags: [], allowedAttributes: {} }),
     summary: sanitizeHtml(String(book.summary || ''), { allowedTags: [], allowedAttributes: {} }),
+
     coverUrl: book.coverUrl || '',
     thumbnailUrl: book.thumbnailUrl || '',
-    acquisitions: Array.isArray(book.acquisitions) ? book.acquisitions.map(a => ({ href: a.href || '', type: a.type || '', rel: a.rel || '' })) : []
+
+    acquisitions: Array.isArray(book.acquisitions)
+      ? book.acquisitions.map(a => ({
+        href: a.href || '',
+        type: a.type || '',
+        rel: a.rel || ''
+      }))
+      : []
   };
 }
+
 
 // ensureParsed(language) — main entrypoint for other code
 // - if language is falsy: return object with empty books and facets.languages populated from main catalog (counts = 0)
@@ -547,23 +573,45 @@ async function ensureParsed(language) {
 
     // If no language requested -> empty books; return languages list in facets
     if (!language) {
-      // build languages facets object with counts = 0 (cheap)
       const languagesFacet = {};
       Object.keys(main.languages || {}).forEach((k) => {
         languagesFacet[k] = 0;
       });
 
+      // Retrieve any existing cached language facets (to get full key lists)
+      const cacheObj = await getCacheObject();
+      const anyLangKey = Object.keys(cacheObj.languages || {})[0];
+
+      const fullFacets =
+        (anyLangKey && cacheObj.languages[anyLangKey]?.facets) || {
+          authors: {},
+          publishers: {},
+          readingLevels: {},
+          categories: {}
+        };
+
       return {
         fetchedAt: main.fetchedAt || 0,
-        books: [], // IMPORTANT: empty per Option A
+        books: [],
         facets: {
           languages: languagesFacet,
-          publishers: {},
-          authors: {},
-          readingLevels: {}
+
+          authors: Object.fromEntries(
+            Object.keys(fullFacets.authors).map(k => [k, 0])
+          ),
+          publishers: Object.fromEntries(
+            Object.keys(fullFacets.publishers).map(k => [k, 0])
+          ),
+          readingLevels: Object.fromEntries(
+            Object.keys(fullFacets.readingLevels).map(k => [k, 0])
+          ),
+          categories: Object.fromEntries(
+            Object.keys(fullFacets.categories).map(k => [k, 0])
+          )
         }
       };
     }
+
 
     // language was provided -> fetch language feed (or use cache)
     const langKey = String(language).trim();
@@ -576,7 +624,8 @@ async function ensureParsed(language) {
           languages: Object.keys(main.languages || {}).reduce((acc, k) => { acc[k] = 0; return acc; }, {}),
           publishers: {},
           authors: {},
-          readingLevels: {}
+          readingLevels: {},
+          categories: {}
         }
       };
     }
@@ -591,7 +640,8 @@ async function ensureParsed(language) {
           languages: Object.keys(main.languages || {}).reduce((acc, k) => { acc[k] = 0; return acc; }, {}),
           publishers: {},
           authors: {},
-          readingLevels: {}
+          readingLevels: {},
+          categories: {}
         }
       };
     }
@@ -600,7 +650,7 @@ async function ensureParsed(language) {
     return {
       fetchedAt: langCache.fetchedAt || 0,
       books: Array.isArray(langCache.books) ? langCache.books : [],
-      facets: langCache.facets || { languages: {}, publishers: {}, authors: {}, readingLevels: {} }
+      facets: langCache.facets || { languages: {}, publishers: {}, authors: {}, readingLevels: {}, categories: {} }
     };
   } catch (err) {
     console.error('ensureParsed error:', err && err.message ? err.message : err);
@@ -614,7 +664,8 @@ async function ensureParsed(language) {
         languages: Object.keys(mainLangs).reduce((acc, k) => { acc[k] = 0; return acc; }, {}),
         publishers: {},
         authors: {},
-        readingLevels: {}
+        readingLevels: {},
+        categories: {}
       }
     };
   }
@@ -640,33 +691,67 @@ app.get('/api/books', validateBooksQuery, async (req, res) => {
     const page = Math.max(1, parseInt(req.query.page || '1', 10));
     const perPage = Math.min(parseInt(req.query.perPage || '50', 10), 200);
 
-    // parse query params safely (support single language param)
+    // parse query params safely
     const qLanguages = parseListParam(req.query.language || req.query.languages);
-    const qLanguage = qLanguages.length ? qLanguages[0] : undefined; // single-select language per Option A
-    const qReading = parseListParam(req.query.readingLevel || req.query.readingLevels).map(s => String(s).toLowerCase());
-    const qAuthors = parseListParam(req.query.author || req.query.authors).map(s => String(s).toLowerCase());
-    const qPublisher = parseListParam(req.query.publisher || req.query.publishers).map(s => String(s).toLowerCase());
+    const qLanguage = qLanguages.length ? qLanguages[0] : undefined;
+
+    const qReading = parseListParam(req.query.readingLevel || req.query.readingLevels)
+      .map(s => String(s).toLowerCase());
+
+    const qAuthors = parseListParam(req.query.author || req.query.authors)
+      .map(s => String(s).toLowerCase());
+
+    const qPublisher = parseListParam(req.query.publisher || req.query.publishers)
+      .map(s => String(s).toLowerCase());
+
+    const qCategories = parseListParam(req.query.categories || req.query.category)
+      .map(s => String(s).toLowerCase());
+
     const q = String(req.query.q || '').toLowerCase().trim();
 
-    // ensureParsed respects Option A: if no language -> books empty
+    // language feed load
     const data = await ensureParsed(qLanguage);
 
     let filtered = Array.isArray(data.books) ? data.books.slice() : [];
 
-    // apply other filters on top of language feed (if language feed present)
+    // apply other filters
     if (qReading.length) {
-      filtered = filtered.filter(b => b.readingLevel && qReading.some(qv => String(b.readingLevel).toLowerCase().includes(qv)));
+      filtered = filtered.filter(b =>
+        b.readingLevel &&
+        qReading.some(qv => String(b.readingLevel).toLowerCase().includes(qv))
+      );
     }
+
     if (qAuthors.length) {
-      filtered = filtered.filter(b => Array.isArray(b.authors) && b.authors.some(a => qAuthors.some(qv => String(a).toLowerCase().includes(qv))));
+      filtered = filtered.filter(b =>
+        Array.isArray(b.authors) &&
+        b.authors.some(a =>
+          qAuthors.some(qv => String(a).toLowerCase().includes(qv))
+        )
+      );
     }
+
     if (qPublisher.length) {
-      filtered = filtered.filter(b => b.publisher && qPublisher.some(qv => b.publisher.toLowerCase().includes(qv)));
+      filtered = filtered.filter(b =>
+        b.publisher &&
+        qPublisher.some(qv => b.publisher.toLowerCase().includes(qv))
+      );
     }
+
+    if (qCategories.length) {
+      filtered = filtered.filter(b =>
+        Array.isArray(b.categories) &&
+        b.categories.some(cat =>
+          qCategories.some(qv => String(cat).toLowerCase().includes(qv))
+        )
+      );
+    }
+
     if (q) {
       filtered = filtered.filter(b =>
         (b.title && String(b.title).toLowerCase().includes(q)) ||
-        (Array.isArray(b.authors) && b.authors.some(a => String(a).toLowerCase().includes(q))) ||
+        (Array.isArray(b.authors) &&
+          b.authors.some(a => String(a).toLowerCase().includes(q))) ||
         (b.summary && String(b.summary).toLowerCase().includes(q))
       );
     }
@@ -674,17 +759,55 @@ app.get('/api/books', validateBooksQuery, async (req, res) => {
     const total = filtered.length;
     const start = (page - 1) * perPage;
     const end = start + perPage;
+
     const pageBooks = filtered.slice(start, end).map(safeSanitizeForResponse);
 
-    // Return facets:
-    // - If language not provided, data.facets contains only languages (with counts 0) and empty others
-    // - If language provided, data.facets contains dynamic facets for that language
+    // Build filtered facets dynamically
+    // Build facet objects with full keys from language-level facets
+    const filteredFacets = {
+      languages: data.facets.languages || {}, // unchanged
+      authors: Object.fromEntries(
+        Object.keys(data.facets.authors || {}).map(key => [key, 0])
+      ),
+      publishers: Object.fromEntries(
+        Object.keys(data.facets.publishers || {}).map(key => [key, 0])
+      ),
+      readingLevels: Object.fromEntries(
+        Object.keys(data.facets.readingLevels || {}).map(key => [key, 0])
+      ),
+      categories: Object.fromEntries(
+        Object.keys(data.facets.categories || {}).map(key => [key, 0])
+      ),
+    };
+
+    filtered.forEach(b => {
+      if (Array.isArray(b.authors)) {
+        b.authors.forEach(a => {
+          filteredFacets.authors[a] = (filteredFacets.authors[a] || 0) + 1;
+        });
+      }
+      if (b.publisher) {
+        filteredFacets.publishers[b.publisher] =
+          (filteredFacets.publishers[b.publisher] || 0) + 1;
+      }
+      if (b.readingLevel) {
+        filteredFacets.readingLevels[b.readingLevel] =
+          (filteredFacets.readingLevels[b.readingLevel] || 0) + 1;
+      }
+      if (Array.isArray(b.categories)) {
+        b.categories.forEach(cat => {
+          filteredFacets.categories[cat] =
+            (filteredFacets.categories[cat] || 0) + 1;
+        });
+      }
+    });
+
     res.json({
       total,
       page,
       perPage,
       books: pageBooks,
-      facets: data.facets || {}
+      facets: filteredFacets
     });
   } catch (err) {
     console.error('GET /api/books error', err && err.message ? err.message : err);

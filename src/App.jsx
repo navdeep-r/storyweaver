@@ -1,5 +1,5 @@
 import { AppProvider } from "./context/AppContext";
-import BookBrowser from "./components/BookBrowser";
+import BookBrowser from "./components/_BookBrowser";
 import "./App.css";
 
 function App() {
