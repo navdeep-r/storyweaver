@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Tailwind v4: Configure class-based dark/sepia mode variants */
+@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant sepia (&:where(.sepia, .sepia *));
+
 /* Optional: keep custom global styles, but REMOVE Vite boilerplate */
 body {
   margin: 0;
@@ -39,6 +43,6 @@ body {
 }
 
 .sepia body {
-  background-color: #f7f3e9;
-  color: #3a2f2a;
+  background-color: #faf6ec;
+  color: #2a1f1a;
 }

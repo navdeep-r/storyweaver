@@ -1,8 +1,6 @@
 /* Custom styles only — no Tailwind imports */
 
-body {
-  background-color: #f8fafc;
-}
+/* Body background handled by theme classes in index.css */
 
 /* Line clamp utility */
 .line-clamp-2 {

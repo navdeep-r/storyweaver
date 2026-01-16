@@ -6,7 +6,7 @@ const PaginationControls = ({ page, perPage, total, onPage, onAddAll }) => {
   const totalPages = Math.max(1, Math.ceil((total || 0) / perPage));
   return (
     <div className="flex items-center justify-between mb-4">
-      <div className="text-sm text-slate-600">Page {page} of {totalPages}</div>
+      <div className="text-sm text-slate-600 dark:text-slate-300">Page {page} of {totalPages}</div>
       <div className="space-x-2">
         <button
           onClick={() => onAddAll("epub")}
@@ -21,8 +21,8 @@ const PaginationControls = ({ page, perPage, total, onPage, onAddAll }) => {
         >
           Add All PDF
         </button>
-        <button disabled={page <= 1} onClick={() => onPage(page - 1)} className="px-3 py-1 bg-slate-100 rounded disabled:opacity-50">Prev</button>
-        <button disabled={page >= totalPages} onClick={() => onPage(page + 1)} className="px-3 py-1 bg-slate-100 rounded disabled:opacity-50">Next</button>
+        <button disabled={page <= 1} onClick={() => onPage(page - 1)} className="px-3 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded disabled:opacity-50">Prev</button>
+        <button disabled={page >= totalPages} onClick={() => onPage(page + 1)} className="px-3 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded disabled:opacity-50">Next</button>
       </div>
     </div>
   );
@@ -68,8 +68,8 @@ const BookGrid = () => {
   return (
     <div className='pb-12'>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-slate-800">
-          Books <span className="text-slate-500 text-base font-normal">({total})</span>
+        <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
+          Books <span className="text-slate-500 dark:text-slate-400 text-base font-normal">({total})</span>
         </h2>
       </div>
 

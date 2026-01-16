@@ -16,7 +16,7 @@ const BookBrowser = () => {
   const { loading, error } = useAppContext();
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 sepia:from-sepia-50 sepia:to-sepia-100">
       {/* Sticky Top Header */}
       <Header />
 
