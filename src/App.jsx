@@ -1,8 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider } from "./context/AppContext";
 import BookBrowser from "./components/BookBrowser";
-import LanguageSelectionPage from "./components/LanguageSelectionPage";
-import "./App.css";
+// import LanguageSelectionPage from "./components/LanguageSelectionPage";
 
 function App() {
   return (
@@ -10,9 +9,11 @@ function App() {
       <AppProvider>
         <div className="App">
           <Routes>
-            <Route path="/" element={<Navigate to="/language-select" replace />} />
+            {/* <Route path="/" element={<Navigate to="/language-select" replace />} />
             <Route path="/language-select" element={<LanguageSelectionPage />} />
-            <Route path="/browse" element={<BookBrowser />} />
+            <Route path="/browse" element={<BookBrowser />} /> */}
+            <Route path="*" element={<BookBrowser />} />
+
           </Routes>
         </div>
       </AppProvider>

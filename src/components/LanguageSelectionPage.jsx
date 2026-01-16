@@ -4,18 +4,18 @@ import { useAppContext } from '../context/AppContext';
 import { motion } from 'framer-motion';
 
 const LanguageSelectionPage = () => {
-  const { filters, setSelectedFilters } = useAppContext();
+  const { facets, setSelectedFilters } = useAppContext();
   const navigate = useNavigate();
   const [selectedLanguage, setSelectedLanguage] = useState('');
 
   // Get available languages from the filters
-  const availableLanguages = filters?.languages || [];
+  const availableLanguages = Object.keys(facets.languages || {});
 
   const handleLanguageSelect = (language) => {
     setSelectedLanguage(language);
     // Set the selected language in the app context
     setSelectedFilters({ language });
-    
+
     // Navigate to the book browser page
     navigate('/browse');
   };
@@ -57,16 +57,15 @@ const LanguageSelectionPage = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => handleLanguageSelect(language)}
-              className={`p-3 sm:p-4 rounded-xl border-2 transition-all duration-200 ${
-                selectedLanguage === language
+              className={`p-3 sm:p-4 rounded-xl border-2 transition-all duration-200 ${selectedLanguage === language
                   ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
                   : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-slate-700 dark:text-slate-300'
-              }`}
+                }`}
             >
               <span className="font-medium text-sm sm:text-base">{language}</span>
             </motion.button>
           ))}
-          
+
           {availableLanguages.length === 0 && (
             <div className="col-span-full text-center py-6 sm:py-8">
               <p className="text-slate-500 dark:text-slate-400 text-sm sm:text-base">

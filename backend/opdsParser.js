@@ -24,7 +24,7 @@ const { XMLParser } = require('fast-xml-parser');
 const sanitizeHtml = require('sanitize-html');
 const { URL } = require('url');
 
-const DEFAULT_MAX_BYTES = 5 * 1024 * 1024; 
+const DEFAULT_MAX_BYTES = 5 * 1024 * 1024;
 function sanitizeText(input) {
   if (!input && input !== 0) return '';
   const str = String(input);
@@ -74,6 +74,25 @@ function normalizeEntry(entry = {}, idx = 0) {
     })
     .filter(Boolean);
 
+  // contributors (illustrators, translators, etc.)
+const contributors = toArray(entry.contributor || entry['dc:contributor'])
+    .map((c) => {
+      if (!c) return null;
+
+      const name = sanitizeText(c?.name || c?.['#text'] || '');
+      if (!name) return null;
+
+      // role may be missing or inconsistent
+      const role = sanitizeText(c?.['@_role'] || c?.role || '');
+
+      return {
+        name,
+        role: role || null, // keep role optional
+      };
+    })
+    .filter(Boolean);
+
+
   // categories -> language, readingLevel
   let language = '';
   let readingLevel = '';
@@ -84,16 +103,25 @@ function normalizeEntry(entry = {}, idx = 0) {
     const term = sanitizeText(cat?.['@_term'] || '');
     const lowerLabel = (label || '').toLowerCase();
     const lowerTerm = (term || '').toLowerCase();
+    const isReadingLevel =
+      lowerLabel.includes('reading level') ||
+      lowerLabel.startsWith('level') ||
+      lowerTerm.startsWith('level') ||
+      lowerTerm.includes('reading');
 
     if (!language && (lowerLabel.includes('language') || lowerTerm === 'language' || lowerTerm === 'english' || lowerTerm.match(/^[a-z]{2}$/i))) {
-      language = label || term;
+      language = (label && !/^[a-z]{2}$/i.test(label) ? label : term).trim();
     }
-    if (!readingLevel && (lowerLabel.includes('reading') || lowerTerm.includes('level') || lowerTerm.includes('reading'))) {
-      readingLevel = label || term;
+    if (!readingLevel && isReadingLevel) {
+      readingLevel = (label || term).trim();
     }
   });
 
-  const publisher = toText(entry['dc:publisher'] || entry.publisher);
+  const publisher = sanitizeText(
+    entry['dcterms:publisher'] ||
+    entry.publisher ||
+    ''
+  );
 
   const summary = toText(entry.summary || entry.content || '');
 
@@ -124,6 +152,7 @@ function normalizeEntry(entry = {}, idx = 0) {
     opdsId: sanitizeText(entry.id || entry['id'] || ''),
     title,
     authors,
+    contributors,   // ← NEW
     language,
     readingLevel,
     publisher,

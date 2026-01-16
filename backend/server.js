@@ -196,6 +196,18 @@ async function parseLanguageFeed(languageTitle) {
     const parsed = await parseFeed(langInfo.href, { retries: Number(/*process.env.OPDS_RETRIES || */2) });
     const books = Array.isArray(parsed.books) ? parsed.books : [];
 
+    // TEMP TEST: inspect one parsed book (REMOVE AFTER TESTING)
+    if (books.length > 0) {
+      const b = books[0];
+      console.log('[TEMP TEST] Parsed book sample:', {
+        title: b.title,
+        language: b.language,
+        readingLevel: b.readingLevel,
+        publisher: b.publisher,
+        contributors: b.contributors,
+      });
+    }
+
     // compute facets for this language feed
     const facets = { languages: {}, publishers: {}, authors: {}, readingLevels: {} };
     books.forEach((b) => {
@@ -254,7 +266,7 @@ async function ensureParsed(language) {
     const main = await parseMainCatalog();
 
     const tenMinutes = CACHE_TTL_MS;
-    
+
 
     if (!language) {
       // build languages facets object using cached per-language counts when available

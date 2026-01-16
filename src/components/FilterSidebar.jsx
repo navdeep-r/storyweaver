@@ -3,14 +3,16 @@ import CheckboxFilterSection from "./CheckboxFilterSection";
 import { useAppContext } from "../context/AppContext";
 
 const FiltersSidebar = () => {
-  const { filters, facets, selectedFilters, setSelectedFilters } = useAppContext();
+  const {
+    filters,
+    facets,
+    availableLanguages,
+    selected,
+    setSelected,
+  } = useAppContext();
 
   const handleToggle = (category, value, add) => {
-    // 🔹 REMOVED: SINGLE-SELECT LANGUAGE FILTER
-    // Language filter has been moved to a dedicated page
-
-    // 🔹 MULTI-SELECT BEHAVIOR FOR OTHER FILTERS
-    setSelectedFilters((prev) => {
+    setSelected((prev) => {
       const current = prev?.[category] || [];
       const updated = add
         ? [...current, value]
@@ -20,19 +22,17 @@ const FiltersSidebar = () => {
     });
   };
 
-  // Normalize key mapping (removed languages)
-  const keyMap = {
-    authors: "authors",
-    publishers: "publishers",
-    categories: "categories",
-  };
-
   // Filter configuration (removed languages)
   const filterConfig = [
     { key: "authors", title: "Authors" },
     { key: "publishers", title: "Publishers" },
     { key: "categories", title: "Categories" },
   ];
+
+  const languageItems = Object.keys(facets.languages || {}).map((lang) => ({
+    id: lang,
+    name: lang,
+  }));
 
   return (
     <motion.aside
@@ -42,14 +42,46 @@ const FiltersSidebar = () => {
       className="w-full p-4 bg-white dark:bg-slate-900 rounded-xl shadow-md overflow-y-auto max-h-[70vh] sm:max-h-[80vh]"
     >
       <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-3">Filters</h2>
+      {/* LANGUAGE (single-select, catalog-driven) */}
+
+      <CheckboxFilterSection
+        title="Language"
+        items={languageItems}
+        facets={facets.languages} // language counts are irrelevant here
+        selectedValues={
+          selected.language ? [selected.language] : []
+        }
+        singleSelect
+        onToggle={(value) =>
+          setSelected({
+            language: value,
+            authors: [],
+            publishers: [],
+            categories: [],
+            readingLevels: [],
+            q: "",
+            page: 1,
+          })
+        }
+        getItemValue={(item) => item.id}
+        getItemLabel={(item) => item.name}
+      />
 
       {filterConfig.map(({ key, title }) => {
         // Get items from filters object
         const items = filters?.[key] || [];
         // Convert simple array to object format for display
         const formattedItems = Array.isArray(items) ? items.map(item => ({ name: item, id: item })) : [];
-        const facet = facets?.[key] || {};
-        const selectedValues = selectedFilters?.[key] || [];
+        const facet =
+          key === "language"
+            ? {}              // ← language has no counts
+            : facets?.[key] || {};
+        const selectedValues =
+          key === "language"
+            ? selected.language
+              ? [selected.language]
+              : []
+            : selected?.[key] || [];
 
         // Debugging helper (only logs in dev)
         if (process.env.NODE_ENV === "development") {
