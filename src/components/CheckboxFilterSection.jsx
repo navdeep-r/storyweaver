@@ -22,7 +22,8 @@ const CheckboxFilterSection = ({
   selectedValues = [],
   onToggle,
   getItemValue,
-  getItemLabel
+  getItemLabel,
+  showCounts = true,
 }) => {
   const [isExpanded, setIsExpanded] = useState(true);
 
@@ -103,11 +104,10 @@ const CheckboxFilterSection = ({
                 return (
                   <div
                     key={value || label}
-                    className={`flex items-center justify-between w-full px-3 py-2 rounded-lg transition-all ${
-                      isSelected
+                    className={`flex items-center justify-between w-full px-3 py-2 rounded-lg transition-all ${isSelected
                         ? 'bg-blue-100 dark:bg-blue-900/40'
                         : 'hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
+                      }`}
                   >
                     <label className="flex items-center cursor-pointer w-full">
                       <input
@@ -120,15 +120,16 @@ const CheckboxFilterSection = ({
                         {label}
                       </span>
                     </label>
-                    <span
-                      className={`text-xs px-2 py-0.5 rounded-full ${
-                        isSelected
-                          ? 'bg-blue-200 dark:bg-blue-800 text-blue-700 dark:text-blue-300'
-                          : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
-                      }`}
-                    >
-                      {count}
-                    </span>
+                    {showCounts && (
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded-full ${isSelected
+                            ? 'bg-blue-200 dark:bg-blue-800 text-blue-700 dark:text-blue-300'
+                            : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+                          }`}
+                      >
+                        {count}
+                      </span>
+                    )}
                   </div>
                 );
               })

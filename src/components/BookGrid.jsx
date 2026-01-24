@@ -21,16 +21,16 @@ const PaginationControls = ({ page, perPage, total, onPage, onAddAll }) => {
         >
           Add All PDF
         </button>
-        <button 
-          disabled={page <= 1} 
-          onClick={() => onPage(page - 1)} 
+        <button
+          disabled={page <= 1}
+          onClick={() => onPage(page - 1)}
           className="px-2 py-1 sm:px-3 sm:py-1 bg-slate-100 dark:bg-slate-700 rounded disabled:opacity-50 text-xs text-slate-700 dark:text-slate-300"
         >
           Prev
         </button>
-        <button 
-          disabled={page >= totalPages} 
-          onClick={() => onPage(page + 1)} 
+        <button
+          disabled={page >= totalPages}
+          onClick={() => onPage(page + 1)}
           className="px-2 py-1 sm:px-3 sm:py-1 bg-slate-100 dark:bg-slate-700 rounded disabled:opacity-50 text-xs text-slate-700 dark:text-slate-300"
         >
           Next
@@ -88,17 +88,17 @@ const BookGrid = () => {
 
       <PaginationControls page={page} perPage={perPage} total={total} onPage={setPage} onAddAll={addAll} />
 
-      <motion.div 
-        layout 
+      <motion.div
+        layout
         className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-2 sm:gap-3"
       >
         <AnimatePresence>
           {displayBooks.map((book) => (
-            <motion.div 
-              key={book.id} 
-              layout 
-              initial={{ opacity: 0, y: 8 }} 
-              animate={{ opacity: 1, y: 0 }} 
+            <motion.div
+              key={book.id}
+              layout
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
             >
               <BookCard book={book} />
@@ -107,7 +107,7 @@ const BookGrid = () => {
         </AnimatePresence>
       </motion.div>
 
-      <div className="mt-4 sm:mt-6">
+      <div className="mt-4 sm:mt-6 pb-14">
         <PaginationControls page={page} perPage={perPage} total={total} onPage={setPage} onAddAll={addAll} />
       </div>
     </div>

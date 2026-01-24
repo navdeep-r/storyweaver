@@ -2,13 +2,14 @@ import { useAppContext } from '../context/AppContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const LanguageOverlay = () => {
-    const { facets, selected, setSelected } = useAppContext();
+    const { facets, selected, setSelected, hydrated } = useAppContext();
 
     // Get available languages from facets
     const availableLanguages = Object.keys(facets.languages || {});
 
-    // Show overlay only when no language is selected
-    const isVisible = !selected.language;
+    // Show overlay only when hydrated (localStorage loaded) AND no language is selected
+    // Wait for hydration to prevent flashing on refresh
+    const isVisible = hydrated && !selected.language;
 
     const handleLanguageSelect = (language) => {
         // Set language and reset all other selections
@@ -70,12 +71,9 @@ const LanguageOverlay = () => {
                                     onClick={() => handleLanguageSelect(language)}
                                     className="p-3 sm:p-4 rounded-xl border-2 transition-all duration-200 border-slate-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 text-slate-700 dark:text-slate-300"
                                 >
-                                    <span className="font-medium text-sm sm:text-base">{language}</span>
-                                    {facets.languages[language] && (
-                                        <span className="block text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                            {facets.languages[language]} books
-                                        </span>
-                                    )}
+                                    <span className="font-medium text-sm sm:text-base">
+                                        {language.replace(/\s*\(\s*\)$/, '')}
+                                    </span>
                                 </motion.button>
                             ))}
 

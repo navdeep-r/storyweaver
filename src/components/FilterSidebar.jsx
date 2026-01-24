@@ -31,7 +31,7 @@ const FiltersSidebar = () => {
 
   const languageItems = Object.keys(facets.languages || {}).map((lang) => ({
     id: lang,
-    name: lang,
+    name: lang.replace(/\s*\(\s*\)$/, ''),
   }));
 
   return (
@@ -47,11 +47,12 @@ const FiltersSidebar = () => {
       <CheckboxFilterSection
         title="Language"
         items={languageItems}
-        facets={facets.languages} // language counts are irrelevant here
+        facets={facets.languages}
         selectedValues={
           selected.language ? [selected.language] : []
         }
         singleSelect
+        showCounts={false}
         onToggle={(value) =>
           setSelected({
             language: value,

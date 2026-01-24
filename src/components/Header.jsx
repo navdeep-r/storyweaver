@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ThemeToggle from './ThemeToggle';
 
 const Header = () => {
-  const { cart, toggleCustomFields, showCustomFields, setSelectedFilters } = useAppContext();
+  const { cart, setSelected } = useAppContext();
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const prevSearchTerm = useRef("");
@@ -13,14 +13,12 @@ const Header = () => {
   // Debounced search effect
   const debouncedSearch = useCallback(
     (term) => {
-      if (term.trim()) {
-        setSelectedFilters({ search: term.trim() });
-      } else {
-        setSelectedFilters({ search: undefined });
-      }
-
+      setSelected((prev) => ({
+        ...prev,
+        q: term.trim() || "",
+      }));
     },
-    [setSelectedFilters]
+    [setSelected]
   );
 
   useEffect(() => {
@@ -28,7 +26,6 @@ const Header = () => {
     prevSearchTerm.current = searchTerm;
 
     const timer = setTimeout(() => {
-      console.log("rel:debouncedSearch running with:", searchTerm);
       debouncedSearch(searchTerm);
     }, 300);
 
@@ -37,7 +34,10 @@ const Header = () => {
 
   const handleClearSearch = () => {
     setSearchTerm('');
-    setSelectedFilters({ search: undefined });
+    setSelected((prev) => ({
+      ...prev,
+      q: "",
+    }));
   };
 
   const handleSearch = (e) => {
@@ -102,17 +102,6 @@ const Header = () => {
           </form>
 
           <div className="flex items-center space-x-4">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={toggleCustomFields}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${showCustomFields
-                ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/25'
-                : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600'
-                }`}
-            >
-              {showCustomFields ? 'Hide Custom Fields' : 'Show Custom Fields'}
-            </motion.button>
 
             <div className="hidden md:flex items-center relative">
               <motion.span
