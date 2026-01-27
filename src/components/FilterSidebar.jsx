@@ -53,6 +53,7 @@ const FiltersSidebar = () => {
         }
         singleSelect
         showCounts={false}
+        hideSelectAll
         onToggle={(value) =>
           setSelected({
             language: value,

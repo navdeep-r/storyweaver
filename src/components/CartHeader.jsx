@@ -72,6 +72,7 @@ const CartHeader = ({ onClose }) => {
                                 type="text"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Escape' && handleClearSearch()}
                                 onFocus={() => setIsSearchFocused(true)}
                                 onBlur={() => setIsSearchFocused(false)}
                                 placeholder="Search by book name..."

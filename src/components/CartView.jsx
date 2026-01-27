@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useAppContext } from '../context/AppContext';
 import CartHeader from './CartHeader';
 import CartFilterSidebar from './CartFilterSidebar';
@@ -5,6 +6,25 @@ import CartTable from './CartTable';
 
 const CartView = ({ onClose }) => {
     const { cart } = useAppContext();
+
+    // Close cart overlay on Escape when not focused on an input
+    useEffect(() => {
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+                const activeEl = document.activeElement;
+                const isInputFocused = activeEl && (
+                    activeEl.tagName === 'INPUT' ||
+                    activeEl.tagName === 'TEXTAREA' ||
+                    activeEl.isContentEditable
+                );
+                if (!isInputFocused) {
+                    onClose();
+                }
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
+        return () => document.removeEventListener('keydown', handleEscape);
+    }, [onClose]);
 
     return (
         <div className="fixed inset-0 z-30 overflow-hidden bg-white dark:bg-slate-900">
