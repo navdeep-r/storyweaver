@@ -49,6 +49,9 @@ const CheckboxFilterSection = ({
   }, [items, search, getItemLabel]);
 
   // Sort filtered items: selected first, then by facet count
+  // Limit total items to prevent lag with large datasets
+  const MAX_ITEMS = 100;
+
   const sortedItems = useMemo(() => {
     const sortByCount = (a, b) => {
       const countA = facets[getItemLabel(a)] || 0;
@@ -64,8 +67,13 @@ const CheckboxFilterSection = ({
       !selectedValues.includes(getItemLabel(item))
     );
 
-    // Sort each group by facet count, then concatenate
-    return [...selected.sort(sortByCount), ...nonSelected.sort(sortByCount)];
+    // Sort each group by facet count
+    const sortedSelected = selected.sort(sortByCount);
+    const sortedNonSelected = nonSelected.sort(sortByCount);
+
+    // Always show all selected items, then fill remaining with top non-selected
+    const remainingSlots = Math.max(0, MAX_ITEMS - sortedSelected.length);
+    return [...sortedSelected, ...sortedNonSelected.slice(0, remainingSlots)];
   }, [filteredItems, facets, getItemLabel, selectedValues]);
 
   // Framer Motion variants

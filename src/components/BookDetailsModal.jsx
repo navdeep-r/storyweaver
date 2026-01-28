@@ -114,6 +114,18 @@ const BookDetailsModal = ({ book, isOpen, onClose }) => {
                           by {book.authors.join(', ')}
                         </motion.p>
                       )}
+
+                      {/* Contributors (illustrators, etc.) */}
+                      {book.contributors && book.contributors.length > 0 && (
+                        <motion.p
+                          initial={{ y: 20, opacity: 0 }}
+                          animate={{ y: 0, opacity: 1 }}
+                          transition={{ delay: 0.45 }}
+                          className="text-sm text-slate-500 dark:text-slate-400 mt-1"
+                        >
+                          Illustrated by {book.contributors.map(c => c.name || c).join(', ')}
+                        </motion.p>
+                      )}
                     </div>
 
                     <motion.button

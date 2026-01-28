@@ -75,7 +75,7 @@ function normalizeEntry(entry = {}, idx = 0) {
     .filter(Boolean);
 
   // contributors (illustrators, translators, etc.)
-const contributors = toArray(entry.contributor || entry['dc:contributor'])
+  const contributors = toArray(entry.contributor || entry['dc:contributor'])
     .map((c) => {
       if (!c) return null;
 
@@ -147,12 +147,18 @@ const contributors = toArray(entry.contributor || entry['dc:contributor'])
     }
   });
 
+  // extract all categories (labels or terms)
+  const categories = toArray(entry.category)
+    .map(cat => sanitizeText(cat?.['@_label'] || cat?.['@_term'] || ''))
+    .filter(Boolean);
+
   return {
     id: idx + 1,
     opdsId: sanitizeText(entry.id || entry['id'] || ''),
     title,
     authors,
-    contributors,   // ← NEW
+    contributors,
+    categories,   // ← NEW
     language,
     readingLevel,
     publisher,

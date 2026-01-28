@@ -209,12 +209,13 @@ async function parseLanguageFeed(languageTitle) {
     }
 
     // compute facets for this language feed
-    const facets = { languages: {}, publishers: {}, authors: {}, readingLevels: {} };
+    const facets = { languages: {}, publishers: {}, authors: {}, readingLevels: {}, categories: {} };
     books.forEach((b) => {
       if (b.language) facets.languages[b.language] = (facets.languages[b.language] || 0) + 1;
       if (b.publisher) facets.publishers[b.publisher] = (facets.publishers[b.publisher] || 0) + 1;
       if (Array.isArray(b.authors)) b.authors.forEach((a) => { facets.authors[a] = (facets.authors[a] || 0) + 1; });
       if (b.readingLevel) facets.readingLevels[b.readingLevel] = (facets.readingLevels[b.readingLevel] || 0) + 1;
+      if (Array.isArray(b.categories)) b.categories.forEach((c) => { facets.categories[c] = (facets.categories[c] || 0) + 1; });
     });
 
     // create language cache object
@@ -247,6 +248,11 @@ function safeSanitizeForResponse(book) {
     opdsId: String(book.opdsId || ''),
     title: sanitizeHtml(String(book.title || ''), { allowedTags: [], allowedAttributes: {} }),
     authors: (book.authors || []).map(a => sanitizeHtml(String(a || ''), { allowedTags: [], allowedAttributes: {} })),
+    contributors: (book.contributors || []).map(c => ({
+      name: sanitizeHtml(String(c?.name || ''), { allowedTags: [], allowedAttributes: {} }),
+      role: c?.role ? sanitizeHtml(String(c.role), { allowedTags: [], allowedAttributes: {} }) : null
+    })),
+    categories: (book.categories || []).map(c => sanitizeHtml(String(c || ''), { allowedTags: [], allowedAttributes: {} })),
     language: sanitizeHtml(String(book.language || ''), { allowedTags: [], allowedAttributes: {} }),
     readingLevel: sanitizeHtml(String(book.readingLevel || ''), { allowedTags: [], allowedAttributes: {} }),
     publisher: sanitizeHtml(String(book.publisher || ''), { allowedTags: [], allowedAttributes: {} }),
@@ -286,7 +292,8 @@ async function ensureParsed(language) {
           languages: languagesFacet,
           publishers: {},
           authors: {},
-          readingLevels: {}
+          readingLevels: {},
+          categories: {}
         }
       };
     }
@@ -311,7 +318,8 @@ async function ensureParsed(language) {
           languages: languagesFacet,
           publishers: {},
           authors: {},
-          readingLevels: {}
+          readingLevels: {},
+          categories: {}
         }
       };
     }
@@ -326,7 +334,8 @@ async function ensureParsed(language) {
           languages: Object.keys(main.languages || {}).reduce((acc, k) => { acc[k] = 0; return acc; }, {}),
           publishers: {},
           authors: {},
-          readingLevels: {}
+          readingLevels: {},
+          categories: {}
         }
       };
     }
@@ -335,7 +344,7 @@ async function ensureParsed(language) {
     return {
       fetchedAt: langCache.fetchedAt || 0,
       books: Array.isArray(langCache.books) ? langCache.books : [],
-      facets: langCache.facets || { languages: {}, publishers: {}, authors: {}, readingLevels: {} }
+      facets: langCache.facets || { languages: {}, publishers: {}, authors: {}, readingLevels: {}, categories: {} }
     };
   } catch (err) {
     console.error('ensureParsed error:', err && err.message ? err.message : err);
@@ -357,7 +366,8 @@ async function ensureParsed(language) {
         languages: languagesFacet,
         publishers: {},
         authors: {},
-        readingLevels: {}
+        readingLevels: {},
+        categories: {}
       }
     };
   }
