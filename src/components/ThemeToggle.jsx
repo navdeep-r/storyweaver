@@ -1,3 +1,21 @@
+/**
+ * ThemeToggle.jsx — Theme Cycling Button
+ *
+ * A button component that cycles through three visual themes:
+ * light → dark → sepia → light → ...
+ *
+ * Each theme applies a CSS class to the document root element which
+ * activates the corresponding CSS custom properties and Tailwind variants.
+ *
+ * The component renders a context-appropriate icon for each theme:
+ * - Light: Moon icon (switch to dark)
+ * - Dark: Sun icon (switch to sepia)
+ * - Sepia: Custom checkmark circle icon (switch to light)
+ *
+ * Uses Framer Motion for icon transition animations and a `mounted`
+ * flag to prevent hydration mismatches with SSR.
+ */
+
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { SunIcon, MoonIcon } from '@heroicons/react/24/outline';
@@ -7,39 +25,34 @@ const ThemeToggle = () => {
   const { theme, setTheme } = useAppContext();
   const [mounted, setMounted] = useState(false);
 
+  // Set mounted flag after initial render to avoid SSR hydration issues
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Completely rewritten theme toggle logic
+  /**
+   * Cycle to the next theme in the sequence.
+   * Order: light → dark → sepia → light
+   */
   const cycleTheme = () => {
-    // Define the theme cycle order
     const themes = ['light', 'dark', 'sepia'];
-    
-    // Find current theme index
     const currentIndex = themes.indexOf(theme);
-    
-    // Calculate next theme index (cycle back to 0 if at end)
     const nextIndex = (currentIndex + 1) % themes.length;
-    
-    // Apply the new theme
     const nextTheme = themes[nextIndex];
     setTheme(nextTheme);
   };
 
-  // Completely rewritten icon rendering logic
+  /** Render the appropriate icon based on the current theme */
   const renderThemeIcon = () => {
-    // Show a default icon while component is mounting to prevent hydration issues
+    // Show default icon while mounting to prevent hydration mismatch
     if (!mounted) {
       return <MoonIcon className="h-5 w-5 text-slate-600" />;
     }
 
-    // Render appropriate icon based on current theme
     switch (theme) {
       case 'dark':
         return <SunIcon className="h-5 w-5 text-yellow-400" />;
       case 'sepia':
-        // Custom SVG for sepia theme
         return (
           <svg className="h-5 w-5 text-amber-700" fill="currentColor" viewBox="0 0 20 20">
             <path 
@@ -54,7 +67,7 @@ const ThemeToggle = () => {
     }
   };
 
-  // Completely rewritten aria label logic
+  /** Generate an accessible aria-label describing the next theme */
   const getAriaLabel = () => {
     switch (theme) {
       case 'light':
@@ -68,7 +81,7 @@ const ThemeToggle = () => {
     }
   };
 
-  // Completely rewritten button styling logic
+  /** Compute theme-appropriate button styling */
   const getButtonClasses = () => {
     const baseClasses = "p-2 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2";
     
@@ -89,8 +102,9 @@ const ThemeToggle = () => {
       title={getAriaLabel()}
       className={getButtonClasses()}
     >
+      {/* Animate icon change when theme switches */}
       <motion.div
-        key={theme} // Use theme as key to trigger animation on change
+        key={theme}
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.2 }}

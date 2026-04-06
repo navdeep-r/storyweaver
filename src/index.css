@@ -1,10 +1,27 @@
+/*
+ * index.css — Global Styles and Tailwind Integration
+ *
+ * This file serves as the global stylesheet entry point, loaded by main.jsx.
+ * It includes:
+ *
+ * 1. Tailwind CSS layer directives (@tailwind base/components/utilities)
+ * 2. CSS custom properties for the three theme variants (light/dark/sepia)
+ * 3. Global element styles (body, typography, transitions)
+ * 4. Custom scrollbar styling for Webkit and Firefox browsers
+ * 5. Utility classes not covered by Tailwind
+ *
+ * Theme variables defined here are identical to those in App.css.
+ * Both files must remain in sync when modifying design tokens.
+ */
+
+/* ── Tailwind CSS Layer Directives ── */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Custom theme variables and styles */
+/* ── Theme Custom Properties ── */
 :root {
-  /* Light theme colors */
+  /* Light theme (default) */
   --bg-primary: #ffffff;
   --bg-secondary: #f8fafc;
   --text-primary: #1e293b;
@@ -18,28 +35,30 @@
 }
 
 .dark {
+  /* Dark theme overrides */
   --bg-primary: #0f172a;
   --bg-secondary: #1e293b;
   --text-primary: #f1f5f9;
   --text-secondary: #94a3b8;
   --border-color: #334155;
   --shadow-color: rgba(0, 0, 0, 0.5);
-  --accent: #60a5fa; /* Lighter blue for dark theme */
+  --accent: #60a5fa; /* Lighter blue for dark backgrounds */
   --accent-hover: #93c5fd;
 }
 
 .sepia {
+  /* Sepia/parchment theme overrides */
   --bg-primary: #f5f1e6;
   --bg-secondary: #e8e2d3;
   --text-primary: #5c4330;
   --text-secondary: #7a624d;
   --border-color: #d4c7b0;
   --shadow-color: rgba(107, 91, 79, 0.15);
-  --accent: #8b5a2b; /* Sepia brown */
+  --accent: #8b5a2b; /* Warm brown accent */
   --accent-hover: #6b4423;
 }
 
-/* Optional: keep custom global styles, but REMOVE Vite boilerplate */
+/* ── Global Element Styles ── */
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -52,6 +71,7 @@ body {
   transition: background-color var(--transition), color var(--transition);
 }
 
+/* Theme-aware accent colours for links and buttons */
 a,
 button {
   color: var(--accent);
@@ -63,6 +83,7 @@ a:hover {
   color: var(--accent-hover);
 }
 
+/* ── Utility: Two-Line Text Truncation ── */
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -70,14 +91,22 @@ a:hover {
   overflow: hidden;
 }
 
-/* Smooth theme transitions */
+/* ── Smooth Theme Transitions ──
+ * Applied to root elements for seamless theme switches.
+ */
 :root,
 html,
 body {
   transition: background-color 300ms ease, color 300ms ease;
 }
 
-/* Custom thin scrollbar for modern browsers */
+/* ── Custom Scrollbar Styling ──
+ * Two-layer scrollbar customisation:
+ * 1. Universal (*) selector for all scrollable elements
+ * 2. Root (::-webkit-scrollbar) for the main document scrollbar
+ */
+
+/* Thin scrollbar for all scrollable elements */
 *::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -92,6 +121,7 @@ body {
   background: rgba(100, 100, 100, 0.35);
 }
 
+/* Theme-aware scrollbar for the main viewport */
 ::-webkit-scrollbar {
   width: 8px;
 }

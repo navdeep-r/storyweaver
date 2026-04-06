@@ -1,3 +1,30 @@
+/**
+ * BookDetailsModal.jsx — Full-Detail Book Modal
+ *
+ * A portal-rendered modal that displays comprehensive information about
+ * a single book. Appears when the user clicks "View" on a BookCard.
+ *
+ * Features:
+ * - Cover image with animated entrance
+ * - Full title, author list, and contributor credits
+ * - Metadata tags (language, reading level, publisher)
+ * - Book description/summary
+ * - Action buttons: Preview, Add to Shelf
+ * - Download format buttons (one per acquisition link)
+ * - Escape key dismissal
+ * - Body scroll lock while open
+ * - Backdrop click to close
+ * - Spring-based entrance/exit animations via Framer Motion
+ *
+ * Rendered via React Portal (createPortal) to ensure proper z-index
+ * stacking regardless of the component's position in the DOM tree.
+ *
+ * @param {Object} props
+ * @param {Object} props.book - Book data object.
+ * @param {boolean} props.isOpen - Whether the modal is visible.
+ * @param {Function} props.onClose - Callback to close the modal.
+ */
+
 import { useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -7,11 +34,12 @@ import { useAppContext } from '../context/AppContext';
 const BookDetailsModal = ({ book, isOpen, onClose }) => {
   const { addToCart } = useAppContext();
 
+  /** Keyboard handler: close modal on Escape key */
   const onKeyDown = useCallback((e) => {
     if (e.key === 'Escape') onClose?.();
   }, [onClose]);
 
-  // Lock scroll while modal is open
+  // Lock body scroll and bind escape key while modal is open
   useEffect(() => {
     if (!isOpen) return;
     document.addEventListener('keydown', onKeyDown);
@@ -25,18 +53,18 @@ const BookDetailsModal = ({ book, isOpen, onClose }) => {
 
   if (!book) return null;
 
+  /** Add book to cart in the specified format */
   const handleDownload = (format) => {
     addToCart(book.id, format);
-    // Could add toast notification here
   };
 
+  /** Placeholder: add book to user's personal shelf/wishlist */
   const handleAddToShelf = () => {
-    // Add to user's personal shelf/wishlist
     console.log('Added to shelf:', book.title);
   };
 
+  /** Placeholder: open book preview */
   const handlePreview = () => {
-    // Open book preview
     console.log('Preview book:', book.title);
   };
 
@@ -44,7 +72,7 @@ const BookDetailsModal = ({ book, isOpen, onClose }) => {
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
+          {/* Semi-transparent backdrop with blur */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -54,17 +82,16 @@ const BookDetailsModal = ({ book, isOpen, onClose }) => {
             onClick={onClose}
           />
 
-          {/* Modal */}
+          {/* Modal container — positioned at bottom-right on desktop */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 50 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 50 }}
             transition={{ type: 'spring', duration: 0.4 }}
             className="fixed -bottom-8 -right-8 w-[95vw] md:w-[850px] h-[62vh] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl z-[60] overflow-hidden flex flex-col"
-          // className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:transform md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-4xl md:max-h-[90vh] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl z-50 overflow-hidden"
           >
             <div className="flex flex-col md:flex-row h-full">
-              {/* Book Cover Section */}
+              {/* Left panel: cover image with gradient background */}
               <div className="md:w-1/3 bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700 p-6 flex items-center justify-center">
                 {book.coverUrl ? (
                   <motion.img
@@ -89,9 +116,9 @@ const BookDetailsModal = ({ book, isOpen, onClose }) => {
                 )}
               </div>
 
-              {/* Content Section (stacked vertically: fixed header + scrollable body) */}
+              {/* Right panel: book details (fixed header + scrollable body) */}
               <div className="md:w-2/3 p-6 flex flex-col flex-1 min-h-0">
-                {/* Title / header (NOT scrollable) */}
+                {/* Fixed header: title, authors, close button (does not scroll) */}
                 <div className="shrink-0">
                   <div className="flex items-start justify-between mb-6">
                     <div className="flex-1">
@@ -104,6 +131,7 @@ const BookDetailsModal = ({ book, isOpen, onClose }) => {
                         {book.title}
                       </motion.h1>
 
+                      {/* Author credits */}
                       {book.authors && book.authors.length > 0 && (
                         <motion.p
                           initial={{ y: 20, opacity: 0 }}
@@ -115,7 +143,7 @@ const BookDetailsModal = ({ book, isOpen, onClose }) => {
                         </motion.p>
                       )}
 
-                      {/* Contributors (illustrators, etc.) */}
+                      {/* Contributor credits (illustrators, etc.) */}
                       {book.contributors && book.contributors.length > 0 && (
                         <motion.p
                           initial={{ y: 20, opacity: 0 }}
@@ -128,6 +156,7 @@ const BookDetailsModal = ({ book, isOpen, onClose }) => {
                       )}
                     </div>
 
+                    {/* Close button */}
                     <motion.button
                       initial={{ scale: 0, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
@@ -142,9 +171,9 @@ const BookDetailsModal = ({ book, isOpen, onClose }) => {
                   </div>
                 </div>
 
-                {/* Main content / desc (ONLY this scrolls) */}
+                {/* Scrollable content area: metadata, description, and actions */}
                 <div className="overflow-y-auto flex-1 min-h-0 pb-16">
-                  {/* Metadata Tags */}
+                  {/* Metadata tags (language, reading level, publisher) */}
                   <motion.div
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
@@ -168,7 +197,7 @@ const BookDetailsModal = ({ book, isOpen, onClose }) => {
                     )}
                   </motion.div>
 
-                  {/* Description */}
+                  {/* Book description */}
                   {book.summary && (
                     <motion.div
                       initial={{ y: 20, opacity: 0 }}
@@ -185,7 +214,7 @@ const BookDetailsModal = ({ book, isOpen, onClose }) => {
                     </motion.div>
                   )}
 
-                  {/* Action Buttons */}
+                  {/* Action buttons */}
                   <motion.div
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
@@ -213,7 +242,7 @@ const BookDetailsModal = ({ book, isOpen, onClose }) => {
                     </motion.button>
                   </motion.div>
 
-                  {/* Download Options */}
+                  {/* Download format options */}
                   {book.acquisitions && book.acquisitions.length > 0 && (
                     <motion.div
                       initial={{ y: 20, opacity: 0 }}

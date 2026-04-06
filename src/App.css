@@ -1,5 +1,22 @@
+/*
+ * App.css — Theme CSS Custom Properties
+ *
+ * Defines the design token system used throughout the application.
+ * Three theme variants are supported through CSS class selectors:
+ *
+ *   :root (default)  — Light theme
+ *   .dark            — Dark theme (activated by Tailwind's darkMode: "class")
+ *   .sepia           — Sepia/parchment theme
+ *
+ * The custom properties defined here are consumed by both vanilla CSS
+ * rules in this file and Tailwind utility classes in components.
+ *
+ * Note: These variables are also duplicated in index.css for the
+ * Tailwind layer. Both files must stay in sync when modifying tokens.
+ */
+
 :root {
-  /* Light theme colors */
+  /* ── Light Theme Tokens ── */
   --bg-primary: #ffffff;
   --bg-secondary: #f8fafc;
   --text-primary: #1e293b;
@@ -13,33 +30,37 @@
 }
 
 .dark {
+  /* ── Dark Theme Tokens ── */
   --bg-primary: #0f172a;
   --bg-secondary: #1e293b;
   --text-primary: #f1f5f9;
   --text-secondary: #94a3b8;
   --border-color: #334155;
   --shadow-color: rgba(0, 0, 0, 0.5);
-  --accent: #60a5fa; /* Lighter blue for dark theme */
+  --accent: #60a5fa; /* Lighter blue for dark backgrounds */
   --accent-hover: #93c5fd;
 }
 
 .sepia {
+  /* ── Sepia Theme Tokens ── */
   --bg-primary: #f5f1e6;
   --bg-secondary: #e8e2d3;
   --text-primary: #5c4330;
   --text-secondary: #7a624d;
   --border-color: #d4c7b0;
   --shadow-color: rgba(107, 91, 79, 0.15);
-  --accent: #8b5a2b; /* Sepia brown */
+  --accent: #8b5a2b; /* Warm brown */
   --accent-hover: #6b4423;
 }
 
+/* Apply theme-aware background and text colors to the body */
 body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
   transition: background-color var(--transition), color var(--transition);
 }
 
+/* Theme-aware accent colors for interactive elements */
 a,
 button {
   color: var(--accent);
@@ -51,6 +72,7 @@ a:hover {
   color: var(--accent-hover);
 }
 
+/* Utility class for two-line text truncation */
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -58,6 +80,9 @@ a:hover {
   overflow: hidden;
 }
 
+/* ── Custom Scrollbar Styling ──
+ * Webkit-based browsers get a slim, theme-aware scrollbar.
+ */
 ::-webkit-scrollbar {
   width: 8px;
 }

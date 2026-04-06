@@ -1,3 +1,23 @@
+/**
+ * CartView.jsx — Full-Page Cart Overlay
+ *
+ * A fixed, full-screen overlay that displays the user's cart contents.
+ * Composes three sub-components:
+ *
+ * 1. CartHeader — Title, search, and navigation
+ * 2. CartFilterSidebar — Filters scoped to cart contents
+ * 3. CartTable — Paginated data table with selection and bulk actions
+ *
+ * Shows an empty state with a book icon and "Browse Books" CTA when
+ * the cart has no items.
+ *
+ * Escape key closes the overlay (unless an input is focused, to avoid
+ * interfering with search/filter inputs).
+ *
+ * @param {Object} props
+ * @param {Function} props.onClose - Callback to close the cart overlay.
+ */
+
 import { useEffect } from 'react';
 import { useAppContext } from '../context/AppContext';
 import CartHeader from './CartHeader';
@@ -7,7 +27,7 @@ import CartTable from './CartTable';
 const CartView = ({ onClose }) => {
     const { cart } = useAppContext();
 
-    // Close cart overlay on Escape when not focused on an input
+    // Close on Escape key, but only if no input element is focused
     useEffect(() => {
         const handleEscape = (e) => {
             if (e.key === 'Escape') {
@@ -32,6 +52,7 @@ const CartView = ({ onClose }) => {
 
             <div className="container mx-auto px-4 py-6 h-[calc(100vh-80px)] overflow-hidden">
                 {cart.length === 0 ? (
+                    /* Empty cart state */
                     <div className="text-center py-12">
                         <svg className="mx-auto h-12 w-12 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
@@ -46,13 +67,14 @@ const CartView = ({ onClose }) => {
                         </button>
                     </div>
                 ) : (
+                    /* Cart content layout: sidebar + table */
                     <div className="flex flex-col lg:flex-row gap-6 h-full">
-                        {/* Filter sidebar */}
+                        {/* Filter sidebar for cart-specific filtering */}
                         <div className="w-full lg:w-1/4 lg:max-h-full lg:overflow-y-auto">
                             <CartFilterSidebar />
                         </div>
 
-                        {/* Main content area */}
+                        {/* Main table area */}
                         <div className="w-full lg:w-3/4 flex flex-col min-h-0">
                             <CartTable />
                         </div>

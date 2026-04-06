@@ -1,3 +1,22 @@
+/**
+ * CartTable.jsx — Paginated Cart Data Table
+ *
+ * Renders the cart contents as a tabular data grid with full CRUD-like
+ * functionality. Operates entirely client-side on the cart array from context.
+ *
+ * Features:
+ * - Client-side filtering by search term, language, author, publisher, category
+ * - Pagination with configurable page size (default 100 items/page)
+ * - Row selection via checkboxes (individual and select-all)
+ * - Bulk remove for selected items
+ * - "Download All" and "Clear All" actions
+ * - Responsive column visibility: columns hide progressively on smaller screens
+ * - Framer Motion row enter animations
+ *
+ * The table maintains the original cart indices (`originalIndex`) through
+ * filtering and pagination so that remove operations target the correct items.
+ */
+
 import { useMemo } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { motion } from 'framer-motion';
@@ -19,11 +38,15 @@ const CartTable = () => {
         clearCart,
     } = useAppContext();
 
-    // Apply filters to cart items
+    /**
+     * Apply all active cart filters to produce the visible item list.
+     * Each item is annotated with its originalIndex in the cart array
+     * so that remove operations can target the correct position.
+     */
     const filteredCart = useMemo(() => {
         return cart.map((item, originalIndex) => ({ ...item, originalIndex }))
             .filter(({ book, language }) => {
-                // Search filter (book name only)
+                // Search filter — matches against book title only
                 if (cartSelected.searchTerm) {
                     const searchLower = cartSelected.searchTerm.toLowerCase();
                     if (!book.title?.toLowerCase().includes(searchLower)) {
@@ -31,14 +54,14 @@ const CartTable = () => {
                     }
                 }
 
-                // Language filter (use stored language from cart item, not book.language)
+                // Language filter — uses the stored language from the cart item
                 if (cartSelected.languages?.length > 0) {
                     if (!language || !cartSelected.languages.includes(language)) {
                         return false;
                     }
                 }
 
-                // Author filter
+                // Author filter — matches the first author
                 if (cartSelected.authors?.length > 0) {
                     const bookAuthor = book.authors?.[0];
                     if (!bookAuthor || !cartSelected.authors.includes(bookAuthor)) {
@@ -53,7 +76,7 @@ const CartTable = () => {
                     }
                 }
 
-                // Category filter
+                // Category filter — matches the first category
                 if (cartSelected.categories?.length > 0) {
                     const bookCategory = book.categories?.[0];
                     if (!bookCategory || !cartSelected.categories.includes(bookCategory)) {
@@ -65,18 +88,19 @@ const CartTable = () => {
             });
     }, [cart, cartSelected]);
 
-    // Pagination
+    // Pagination calculations
     const totalPages = Math.max(1, Math.ceil(filteredCart.length / cartPerPage));
     const startIndex = (cartPage - 1) * cartPerPage;
     const paginatedCart = filteredCart.slice(startIndex, startIndex + cartPerPage);
 
-    // Get original indices of visible items for selection
+    // Track which original indices are visible on the current page (for select-all)
     const visibleOriginalIndices = paginatedCart.map(item => item.originalIndex);
 
-    // Check if all visible items are selected
+    // Check if all visible items are currently selected
     const allVisibleSelected = visibleOriginalIndices.length > 0 &&
         visibleOriginalIndices.every(i => cartSelectedItems.includes(i));
 
+    /** Toggle select-all: selects all visible items, or clears selection if all are selected */
     const handleSelectAll = () => {
         if (allVisibleSelected) {
             clearCartSelection();
@@ -85,10 +109,13 @@ const CartTable = () => {
         }
     };
 
+    /** Remove all selected items from the cart */
     const handleBulkRemove = () => {
         if (cartSelectedItems.length === 0) return;
         bulkRemoveFromCart(cartSelectedItems);
     };
+
+    /** Placeholder for download functionality */
     const handleDownloadAll = () => {
         // TODO: Implement actual download logic
         alert(`Downloading ${cart.length} items...`);
@@ -98,7 +125,7 @@ const CartTable = () => {
 
     return (
         <div className="flex flex-col h-full">
-            {/* Controls bar */}
+            {/* Controls bar: item count, action buttons, and pagination */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mb-4 flex-shrink-0">
                 <div className="text-sm text-slate-600 dark:text-slate-400">
                     Showing {paginatedCart.length} of {filteredCart.length} items
@@ -109,6 +136,7 @@ const CartTable = () => {
                     )}
                 </div>
                 <div className="flex flex-wrap justify-center gap-1 sm:gap-2">
+                    {/* Download all action */}
                     <button
                         onClick={handleDownloadAll}
                         disabled={cart.length === 0}
@@ -117,6 +145,8 @@ const CartTable = () => {
                         <ArrowDownTrayIcon className="h-4 w-4" />
                         Download All
                     </button>
+
+                    {/* Clear all items from cart */}
                     <button
                         onClick={clearCart}
                         disabled={cart.length === 0}
@@ -124,6 +154,8 @@ const CartTable = () => {
                     >
                         Clear All
                     </button>
+
+                    {/* Bulk remove — only visible when items are selected */}
                     {selectedCount > 0 && (
                         <button
                             onClick={handleBulkRemove}
@@ -133,6 +165,8 @@ const CartTable = () => {
                             Remove Selected ({selectedCount})
                         </button>
                     )}
+
+                    {/* Top pagination */}
                     <button
                         disabled={cartPage <= 1}
                         onClick={() => setCartPage(cartPage - 1)}
@@ -153,9 +187,10 @@ const CartTable = () => {
                 </div>
             </div>
 
-            {/* Table */}
+            {/* Data table */}
             <div className="flex-1 overflow-auto rounded-lg border border-slate-200 dark:border-slate-700">
                 <table className="w-full text-sm">
+                    {/* Table header with select-all checkbox */}
                     <thead className="bg-slate-50 dark:bg-slate-800 sticky top-0">
                         <tr>
                             <th className="px-3 py-3 text-left">
@@ -167,6 +202,7 @@ const CartTable = () => {
                                 />
                             </th>
                             <th className="px-3 py-3 text-left font-medium text-slate-700 dark:text-slate-300">Title</th>
+                            {/* Responsive columns: hidden on smaller screens */}
                             <th className="px-3 py-3 text-left font-medium text-slate-700 dark:text-slate-300 hidden sm:table-cell">Author</th>
                             <th className="px-3 py-3 text-left font-medium text-slate-700 dark:text-slate-300 hidden md:table-cell">Publisher</th>
                             <th className="px-3 py-3 text-left font-medium text-slate-700 dark:text-slate-300 hidden lg:table-cell">Language</th>
@@ -175,6 +211,8 @@ const CartTable = () => {
                             <th className="px-3 py-3 text-left font-medium text-slate-700 dark:text-slate-300">Action</th>
                         </tr>
                     </thead>
+
+                    {/* Table body */}
                     <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                         {paginatedCart.length === 0 ? (
                             <tr>
@@ -192,6 +230,7 @@ const CartTable = () => {
                                         animate={{ opacity: 1 }}
                                         className={`${isSelected ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
                                     >
+                                        {/* Selection checkbox */}
                                         <td className="px-3 py-3">
                                             <input
                                                 type="checkbox"
@@ -215,6 +254,7 @@ const CartTable = () => {
                                         <td className="px-3 py-3 text-slate-600 dark:text-slate-400 hidden xl:table-cell truncate max-w-[120px]" title={book.categories?.join(', ')}>
                                             {book.categories?.[0] || '-'}
                                         </td>
+                                        {/* Format badge — colour-coded by type */}
                                         <td className="px-3 py-3">
                                             <span className={`px-2 py-1 rounded text-xs font-medium ${format === 'pdf'
                                                 ? 'bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200'
@@ -223,6 +263,7 @@ const CartTable = () => {
                                                 {format.toUpperCase()}
                                             </span>
                                         </td>
+                                        {/* Remove button */}
                                         <td className="px-3 py-3">
                                             <button
                                                 onClick={() => removeFromCart(originalIndex)}

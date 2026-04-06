@@ -1,3 +1,19 @@
+/**
+ * CartFilterSidebar.jsx — Cart-Specific Filter Sidebar
+ *
+ * A filter panel that operates on the cart contents rather than the
+ * full book catalog. Dynamically generates filter sections based on
+ * the `cartFacets` object, which tracks counts of each language,
+ * author, publisher, and category present in the cart.
+ *
+ * Empty filter sections (i.e., no values in that dimension) are hidden
+ * automatically. If no filters are available at all, a "No filters
+ * available" message is shown.
+ *
+ * Uses the same CheckboxFilterSection component as the browse-mode
+ * sidebar for a consistent filter UX.
+ */
+
 import { motion } from 'framer-motion';
 import CheckboxFilterSection from './CheckboxFilterSection';
 import { useAppContext } from '../context/AppContext';
@@ -9,6 +25,13 @@ const CartFilterSidebar = () => {
         setCartSelected,
     } = useAppContext();
 
+    /**
+     * Toggle a filter value in the cart filter state.
+     *
+     * @param {string} category - Filter dimension key (e.g., "languages").
+     * @param {string} value - The value to add or remove.
+     * @param {boolean} add - True to add, false to remove.
+     */
     const handleToggle = (category, value, add) => {
         setCartSelected((prev) => {
             const current = prev?.[category] || [];
@@ -20,7 +43,7 @@ const CartFilterSidebar = () => {
         });
     };
 
-    // Filter configuration for cart (excludes book name - handled by search)
+    // Filter dimension configuration
     const filterConfig = [
         { key: 'languages', title: 'Language' },
         { key: 'authors', title: 'Authors' },
@@ -40,12 +63,12 @@ const CartFilterSidebar = () => {
             </h2>
 
             {filterConfig.map(({ key, title }) => {
-                // Get facets from cartFacets (counts of each value in cart)
+                // Build items from cart facets (only values present in the cart)
                 const facet = cartFacets?.[key] || {};
                 const items = Object.keys(facet).map((name) => ({ id: name, name }));
                 const selectedValues = cartSelected?.[key] || [];
 
-                // Skip empty filter sections
+                // Skip rendering empty filter sections
                 if (items.length === 0) {
                     return null;
                 }
@@ -64,7 +87,7 @@ const CartFilterSidebar = () => {
                 );
             })}
 
-            {/* Show message if no filters available */}
+            {/* Fallback message when no filter dimensions have values */}
             {filterConfig.every(({ key }) => Object.keys(cartFacets?.[key] || {}).length === 0) && (
                 <div className="text-sm text-slate-400 italic py-4">
                     No filters available

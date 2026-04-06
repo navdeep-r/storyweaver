@@ -1,3 +1,19 @@
+/**
+ * BookCard.jsx — Individual Book Card Component
+ *
+ * Renders a compact, interactive card for a single book in the grid.
+ * Features:
+ * - Cover image with fallback placeholder icon
+ * - Title and author display (truncated with CSS line-clamp)
+ * - Language and reading level tags
+ * - Format buttons (PDF, EPUB) that add the book to the cart
+ * - Hover overlay with a "View" button that opens the detail modal
+ * - Framer Motion enter/exit and hover animations
+ *
+ * @param {Object} props
+ * @param {Object} props.book - Book data object from the API.
+ */
+
 import { useState } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { motion } from 'framer-motion';
@@ -8,14 +24,18 @@ const BookCard = ({ book }) => {
   const { addToCart } = useAppContext();
   const [showModal, setShowModal] = useState(false);
 
+  /**
+   * Add this book to the cart in the specified format.
+   * Delegates to the context's addToCart which handles deduplication.
+   */
   const handleAddToCart = (format) => {
     addToCart(book.id, format);
   };
 
-  // Now backend returns authors as array of strings; safely get first author
+  // Safely extract the first author name (API returns authors as string[])
   const firstAuthorName = Array.isArray(book.authors) && book.authors.length > 0 ? book.authors[0] : null;
 
-  // Get available formats
+  // Derive human-readable format labels from MIME types in acquisitions
   const formats = book.acquisitions.map(acq => {
     if (acq.type.includes('pdf')) return 'PDF';
     if (acq.type.includes('epub')) return 'EPUB';
@@ -32,6 +52,7 @@ const BookCard = ({ book }) => {
       transition={{ duration: 0.15 }}
       className="group bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden shadow-xs hover:shadow-sm transition-all duration-200 h-full flex flex-col"
     >
+      {/* Cover image area with 3:4 aspect ratio */}
       <div className="relative aspect-[3/4] overflow-hidden">
         {book.coverUrl ? (
           <img
@@ -39,11 +60,13 @@ const BookCard = ({ book }) => {
             alt={book.title}
             className="w-full h-full object-cover transform transition-transform duration-200 group-hover:scale-105"
             onError={(e) => {
+              // Hide broken image and show fallback placeholder
               e.target.style.display = 'none';
               if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
             }}
           />
         ) : null}
+        {/* Fallback placeholder for missing cover images */}
         {!book.coverUrl && (
           <div className="w-full h-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
             <svg className="w-6 h-6 text-slate-300 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -52,7 +75,7 @@ const BookCard = ({ book }) => {
           </div>
         )}
 
-        {/* Hover preview overlay */}
+        {/* Hover overlay with "View" button — opens the detail modal */}
         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
           <motion.button
             initial={{ scale: 0, opacity: 0 }}
@@ -70,6 +93,7 @@ const BookCard = ({ book }) => {
         </div>
       </div>
 
+      {/* Card body: title, author, tags, and format buttons */}
       <div className="p-2 flex flex-col flex-grow">
         <h3 className="font-semibold text-slate-800 dark:text-slate-100 text-xs line-clamp-2 leading-tight" title={book.title}>{book.title}</h3>
 
@@ -79,7 +103,7 @@ const BookCard = ({ book }) => {
           <p className="text-[10px] text-slate-600 dark:text-slate-400 mt-1 line-clamp-1">by Unknown author</p>
         )}
 
-        {/* Smart Tags */}
+        {/* Metadata tags: language and reading level */}
         <div className="mt-1.5 flex flex-wrap gap-0.5">
           {book.language && (
             <span className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200">
@@ -93,6 +117,7 @@ const BookCard = ({ book }) => {
           )}
         </div>
 
+        {/* Format buttons — each click adds the book in that format to the cart */}
         <div className="mt-2 flex flex-wrap gap-0.5 mt-auto">
           {formats.map((format, index) => (
             <button
@@ -106,7 +131,7 @@ const BookCard = ({ book }) => {
         </div>
       </div>
 
-      {/* Book Details Modal */}
+      {/* Detail modal — rendered as a portal to document.body */}
       <BookDetailsModal
         book={book}
         isOpen={showModal}

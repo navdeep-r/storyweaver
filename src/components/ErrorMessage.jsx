@@ -1,9 +1,21 @@
+/**
+ * ErrorMessage.jsx — Error Display Component
+ *
+ * Renders a styled error alert with an icon and message text.
+ * Returns null when no message is provided, making it safe to
+ * render unconditionally in parent components.
+ *
+ * @param {Object} props
+ * @param {string|null} props.message - Error message to display. Returns null if falsy.
+ */
+
 const ErrorMessage = ({ message }) => {
   if (!message) return null;
 
   return (
     <div className="rounded-lg bg-red-50 p-4 border border-red-200">
       <div className="flex items-start">
+        {/* Error icon */}
         <svg className="h-5 w-5 text-red-500 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8..." clipRule="evenodd" />
         </svg>

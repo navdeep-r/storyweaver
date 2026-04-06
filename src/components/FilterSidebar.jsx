@@ -1,3 +1,19 @@
+/**
+ * FilterSidebar.jsx — Browse Mode Filter Sidebar
+ *
+ * Renders the filter panel for the main book browsing view. Contains:
+ *
+ * 1. **Language filter** (single-select): Selecting a language resets all
+ *    other filters and triggers a new API call for that language's catalog.
+ *    Uses CheckboxFilterSection with singleSelect mode.
+ *
+ * 2. **Author/Publisher/Category filters** (multi-select): Each uses
+ *    CheckboxFilterSection with facet counts from the current language feed.
+ *
+ * The sidebar slides in with a Framer Motion animation and is scrollable
+ * on smaller screens (max-height constrained).
+ */
+
 import { motion } from "framer-motion";
 import CheckboxFilterSection from "./CheckboxFilterSection";
 import { useAppContext } from "../context/AppContext";
@@ -11,6 +27,15 @@ const FiltersSidebar = () => {
     setSelected,
   } = useAppContext();
 
+  /**
+   * Toggle a multi-select filter value on or off.
+   * Dispatches an updater function to setSelected to toggle the value
+   * in the appropriate filter array.
+   *
+   * @param {string} category - Filter category key (e.g., "authors").
+   * @param {string} value - The filter value to toggle.
+   * @param {boolean} add - Whether to add (true) or remove (false) the value.
+   */
   const handleToggle = (category, value, add) => {
     setSelected((prev) => {
       const current = prev?.[category] || [];
@@ -22,16 +47,17 @@ const FiltersSidebar = () => {
     });
   };
 
-  // Filter configuration (removed languages)
+  // Configuration for the multi-select filter sections
   const filterConfig = [
     { key: "authors", title: "Authors" },
     { key: "publishers", title: "Publishers" },
     { key: "categories", title: "Categories" },
   ];
 
+  // Transform language facet keys into items for the CheckboxFilterSection
   const languageItems = Object.keys(facets.languages || {}).map((lang) => ({
     id: lang,
-    name: lang.replace(/\s*\(\s*\)$/, ''),
+    name: lang.replace(/\s*\(\s*\)$/, ''), // Strip empty parentheses from display
   }));
 
   return (
@@ -42,8 +68,12 @@ const FiltersSidebar = () => {
       className="w-full p-4 bg-white dark:bg-slate-900 rounded-xl shadow-md overflow-y-auto max-h-[70vh] sm:max-h-[80vh]"
     >
       <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-3">Filters</h2>
-      {/* LANGUAGE (single-select, catalog-driven) */}
 
+      {/*
+       * Language filter — single-select mode.
+       * Selecting a language resets all other filter dimensions and
+       * triggers a full data refresh for that language's catalog.
+       */}
       <CheckboxFilterSection
         title="Language"
         items={languageItems}
@@ -69,14 +99,13 @@ const FiltersSidebar = () => {
         getItemLabel={(item) => item.name}
       />
 
+      {/* Multi-select filters for authors, publishers, and categories */}
       {filterConfig.map(({ key, title }) => {
-        // Get items from filters object
         const items = filters?.[key] || [];
-        // Convert simple array to object format for display
         const formattedItems = Array.isArray(items) ? items.map(item => ({ name: item, id: item })) : [];
         const facet =
           key === "language"
-            ? {}              // ← language has no counts
+            ? {}
             : facets?.[key] || {};
         const selectedValues =
           key === "language"
@@ -85,7 +114,7 @@ const FiltersSidebar = () => {
               : []
             : selected?.[key] || [];
 
-        // Debugging helper (only logs in dev)
+        // Development-only debug logging
         if (process.env.NODE_ENV === "development") {
           console.log(`[${key}] items:`, items, "facet:", facet);
         }

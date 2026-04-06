@@ -1,3 +1,21 @@
+/**
+ * Header.jsx — Application Header
+ *
+ * Sticky header bar containing:
+ * - Application branding ("StoryWeaver Library")
+ * - Debounced search input for free-text search
+ * - Cart item count badge (visible on both mobile and desktop)
+ * - Theme toggle button (light/dark/sepia)
+ *
+ * The search input uses a 300ms debounce to avoid firing API requests
+ * on every keystroke. The debounced value is pushed into the global
+ * `selected.q` filter via the context's `setSelected`.
+ *
+ * Layout is responsive:
+ * - Mobile: branding and cart on one row, search below
+ * - Desktop (sm+): single row with all elements
+ */
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { MagnifyingGlassIcon, ShoppingBagIcon, XMarkIcon } from '@heroicons/react/24/outline';
@@ -8,9 +26,13 @@ const Header = () => {
   const { cart, setSelected } = useAppContext();
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  /** Ref to track previous search term, preventing redundant dispatches */
   const prevSearchTerm = useRef("");
 
-  // Debounced search effect
+  /**
+   * Push the search term into global state.
+   * Wrapped in useCallback to maintain stable reference for the debounce effect.
+   */
   const debouncedSearch = useCallback(
     (term) => {
       setSelected((prev) => ({
@@ -21,6 +43,7 @@ const Header = () => {
     [setSelected]
   );
 
+  // Debounced search effect — waits 300ms after the user stops typing
   useEffect(() => {
     if (prevSearchTerm.current === searchTerm) return;
     prevSearchTerm.current = searchTerm;
@@ -32,6 +55,7 @@ const Header = () => {
     return () => clearTimeout(timer);
   }, [searchTerm, debouncedSearch]);
 
+  /** Clear the search input and reset the global search filter */
   const handleClearSearch = () => {
     setSearchTerm('');
     setSelected((prev) => ({
@@ -40,15 +64,16 @@ const Header = () => {
     }));
   };
 
+  /** Prevent form submission (search is handled by debounced effect) */
   const handleSearch = (e) => {
     e.preventDefault();
-    // Search is handled by debounced effect
   };
 
   return (
     <header className="bg-white/80 dark:bg-slate-900/80 sepia:bg-sepia-50/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-700 sepia:border-sepia-300 sticky top-0 z-10">
       <div className="container mx-auto px-4 py-3 sm:py-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+          {/* Branding and mobile cart badge */}
           <div className="flex items-center justify-between">
             <motion.h1
               initial={{ x: -20, opacity: 0 }}
@@ -57,6 +82,7 @@ const Header = () => {
             >
               StoryWeaver Library
             </motion.h1>
+            {/* Mobile-only cart badge */}
             <div className="sm:hidden relative">
               <span className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                 {cart.length}
@@ -65,11 +91,13 @@ const Header = () => {
             </div>
           </div>
 
+          {/* Search form */}
           <form onSubmit={handleSearch} className="flex-1 max-w-2xl">
             <motion.div
               className={`relative transition-all duration-300 ${isSearchFocused ? 'scale-[1.02]' : ''}`}
               whileFocus={{ scale: 1.02 }}
             >
+              {/* Search icon */}
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <MagnifyingGlassIcon className="h-5 w-5 text-slate-400" />
               </div>
@@ -83,6 +111,7 @@ const Header = () => {
                 placeholder="Search books, authors, categories..."
                 className="block w-full pl-10 pr-12 py-2 sm:py-3 border border-slate-300 dark:border-slate-600 sepia:border-sepia-400 rounded-lg sm:rounded-xl bg-white dark:bg-slate-800 sepia:bg-sepia-100 text-slate-900 dark:text-slate-100 sepia:text-sepia-900 placeholder-slate-500 dark:placeholder-slate-400 sepia:placeholder-sepia-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm sm:text-base"
               />
+              {/* Animated clear button — shows when search has content */}
               <AnimatePresence>
                 {searchTerm && (
                   <motion.button
@@ -102,6 +131,7 @@ const Header = () => {
             </motion.div>
           </form>
 
+          {/* Desktop cart badge and theme toggle */}
           <div className="flex items-center space-x-4">
 
             <div className="hidden md:flex items-center relative">

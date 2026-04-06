@@ -1,44 +1,133 @@
-# Backend (OPDS parsing API)
+# Backend — OPDS Parsing API
 
-This folder contains the server-side OPDS parsing logic and a small Express server that exposes a paginated/filterable JSON API.
+The backend is a Node.js Express server that fetches, parses, and caches [OPDS (Open Publication Distribution System)](https://opds.io/) catalog feeds from StoryWeaver. It exposes a paginated, filterable JSON API consumed by the React frontend.
 
-Files
-- `opdsParser.js` — parses the OPDS (Atom) feed and normalizes entries.
-- `server.js` — Express server that exposes `/api/books` and `/health`.
+## Files
 
-Environment
-- `OPDS_URL` — optional environment variable that points to the OPDS feed URL. Defaults to the StoryWeaver English catalog used in the project.
-- `PORT` — optional server port (defaults to 5000).
+| File              | Purpose                                                             |
+| ----------------- | ------------------------------------------------------------------- |
+| `server.js`       | Express application with endpoints, caching, filtering, and security middleware. |
+| `opdsParser.js`   | Standalone OPDS/Atom XML parser with SSRF protection, retry logic, and entry normalisation. |
+| `opds_cache.json` | Auto-generated file-based cache (gitignored). Persists parsed feeds across server restarts. |
 
-Run locally
-1. Install dependencies in the project root (if not already done):
+## Architecture
 
-```powershell
+```
+Client Request
+      │
+      ▼
+  [Rate Limiter] ─► [CORS] ─► [Helmet] ─► [Compression]
+      │
+      ▼
+  /api/books handler
+      │
+      ├── No language param? ─► Return language list from main catalog
+      │
+      └── Language param present?
+              │
+              ├── Cache hit (< 10 min)? ─► Return cached books + facets
+              │
+              └── Cache miss? ─► Fetch language OPDS feed
+                                   │
+                                   ├── Parse XML (opdsParser.js)
+                                   ├── Compute facets
+                                   ├── Cache result (Redis / File / Memory)
+                                   └── Return paginated, filtered, sanitised response
+```
+
+## Environment Variables
+
+| Variable           | Default                          | Description                              |
+| ------------------ | -------------------------------- | ---------------------------------------- |
+| `PORT`             | `5000`                           | Server listen port                       |
+| `ALLOWED_ORIGINS`  | `http://localhost:5173,...`       | Comma-separated CORS origins             |
+| `REDIS_URL`        | (empty — uses file/memory cache) | Redis connection string                  |
+| `OPDS_URL`         | StoryWeaver catalog URL          | Root OPDS catalog feed                   |
+| `OPDS_WHITELIST`   | (empty)                          | Allowed feed hostnames for SSRF protection |
+| `OPDS_MAX_BYTES`   | `5242880` (5 MB)                 | Max feed download size                   |
+| `OPDS_RETRIES`     | `2`                              | Fetch retry attempts                     |
+| `OPDS_TIMEOUT_MS`  | `15000`                          | Fetch timeout in ms                      |
+| `CACHE_TTL_MS`     | `600000` (10 min)                | Cache time-to-live in ms                 |
+
+## Running Locally
+
+```bash
+# From the project root
+cd backend
 npm install
+npm start
+# or with auto-reload:
+npm run dev
 ```
 
-2. Start the backend server (from the project root):
+The server starts on `http://localhost:5000`.
 
-```powershell
-npm run backend
-# or
-node backend/server.js
+## Endpoints
+
+### `GET /api/books`
+
+Paginated, filterable book list.
+
+**Parameters:**
+
+| Param          | Type   | Required | Description                                     |
+| -------------- | ------ | -------- | ----------------------------------------------- |
+| `page`         | number | No       | Page number (default `1`)                       |
+| `perPage`      | number | No       | Items per page (default `50`, max `200`)        |
+| `language`     | string | No       | Language filter (single value)                  |
+| `authors`      | string | No       | Comma-separated author filter                   |
+| `publishers`   | string | No       | Comma-separated publisher filter                |
+| `readingLevels`| string | No       | Comma-separated reading level filter            |
+| `q`            | string | No       | Free-text search (title, author, summary)       |
+
+**Response shape:**
+
+```json
+{
+  "total": 1234,
+  "page": 1,
+  "perPage": 50,
+  "books": [{ "id": 1, "title": "...", "authors": [...], ... }],
+  "facets": {
+    "languages": {},
+    "authors": {},
+    "publishers": {},
+    "categories": {},
+    "readingLevels": {}
+  }
+}
 ```
 
-The server runs on `http://localhost:5000` by default.
+### `GET /health`
 
-Endpoints
-- `GET /api/books?page=1&perPage=50&language=english&author=smith&q=search` — paginated and filterable list of books.
-  - Query params support comma-separated values for multi-select (e.g., `language=en,hi`).
-  - Supports `q` for free-text search over title/author/summary.
-- `GET /health` — basic health check and cache metadata.
+Health check returning cache status.
 
-Notes
-- The backend caches parsed results for a short period (10 minutes by default in the implementation) to avoid re-parsing the XML on every request.
-- Move heavy parsing work to the backend to prevent browser OOM errors when loading large OPDS catalogs.
+```json
+{ "status": "ok", "cachedAt": 1712400000000, "languages": 25 }
+```
 
-Deployment
-- You can containerize `backend/server.js` or run it behind a process manager. Ensure `fast-xml-parser` and `axios` are installed.
+## Caching
 
-Security
-- This is a dev/demo server. If exposing the endpoint publicly, add CORS restrictions, authentication, rate-limiting and other hardening as appropriate.
+Three-tier strategy (checked in order):
+
+1. **Redis** — If `REDIS_URL` is set. 1-hour TTL.
+2. **File** — `opds_cache.json` on disk. Survives restarts.
+3. **In-memory** — JavaScript object. Zero-latency but volatile.
+
+Each language feed is cached independently with a configurable TTL (default 10 minutes).
+
+## Security Considerations
+
+- **CORS**: Only whitelisted origins are permitted.
+- **Rate limiting**: 200 requests per 15-minute window.
+- **Helmet**: Standard security headers.
+- **SSRF protection**: Feed URLs validated against HTTPS-only or explicit hostname whitelist.
+- **Input validation**: Query parameters are validated before processing.
+- **Output sanitisation**: All text fields are stripped of HTML.
+- **Size limits**: Feeds larger than `OPDS_MAX_BYTES` are rejected.
+
+## Deployment
+
+The backend is currently deployed on [Render](https://render.com) at `https://storyweaver-9b0g.onrender.com`.
+
+For other environments, ensure all dependencies from `package.json` are installed. The server can run behind PM2, Docker, or any Node.js-compatible hosting platform.

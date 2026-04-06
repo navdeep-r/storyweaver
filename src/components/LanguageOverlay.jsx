@@ -1,18 +1,43 @@
+/**
+ * LanguageOverlay.jsx — Full-Screen Language Selection Gate
+ *
+ * A full-screen overlay that appears on the initial load (or whenever no
+ * language is selected). Displays all available languages from the OPDS
+ * catalog as a grid of clickable buttons.
+ *
+ * Selecting a language:
+ * - Sets the global language filter
+ * - Resets all other filter dimensions (authors, publishers, etc.)
+ * - Triggers a data fetch for that language's catalog
+ * - Animates out the overlay
+ *
+ * The overlay waits for sessionStorage hydration to complete before
+ * deciding whether to show. This prevents a flash of the overlay on
+ * page refresh when the user has already selected a language.
+ *
+ * While available languages are loading, shows a skeleton pulse animation.
+ */
+
 import { useAppContext } from '../context/AppContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const LanguageOverlay = () => {
     const { facets, selected, setSelected, hydrated } = useAppContext();
 
-    // Get available languages from facets
+    // Extract language names from facet keys
     const availableLanguages = Object.keys(facets.languages || {});
 
-    // Show overlay only when hydrated (localStorage loaded) AND no language is selected
-    // Wait for hydration to prevent flashing on refresh
+    // Show overlay only after hydration AND when no language is selected.
+    // This prevents the overlay from flashing on refresh if language was already chosen.
     const isVisible = hydrated && !selected.language;
 
+    /**
+     * Handle language selection.
+     * Sets the language and resets all other filter dimensions to their defaults.
+     *
+     * @param {string} language - The selected language key.
+     */
     const handleLanguageSelect = (language) => {
-        // Set language and reset all other selections
         setSelected({
             language: language,
             authors: [],
@@ -40,6 +65,7 @@ const LanguageOverlay = () => {
                         transition={{ duration: 0.4, delay: 0.1 }}
                         className="w-full max-w-md sm:max-w-2xl bg-slate-50 dark:bg-slate-800 rounded-2xl shadow-xl p-6 sm:p-8"
                     >
+                        {/* Heading */}
                         <div className="text-center mb-6 sm:mb-8">
                             <motion.h1
                                 initial={{ opacity: 0 }}
@@ -59,13 +85,14 @@ const LanguageOverlay = () => {
                             </motion.p>
                         </div>
 
+                        {/* Language button grid */}
                         <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
                             {availableLanguages.map((language, index) => (
                                 <motion.button
                                     key={language}
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.1 * Math.min(index, 8) }}
+                                    transition={{ delay: 0.1 * Math.min(index, 8) }} // Cap stagger at 8
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
                                     onClick={() => handleLanguageSelect(language)}
@@ -77,6 +104,7 @@ const LanguageOverlay = () => {
                                 </motion.button>
                             ))}
 
+                            {/* Loading state — shown while languages are being fetched */}
                             {availableLanguages.length === 0 && (
                                 <div className="col-span-full text-center py-6 sm:py-8">
                                     <div className="animate-pulse">

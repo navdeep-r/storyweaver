@@ -1,14 +1,30 @@
 /**
- * CheckboxFilterSection.jsx
- * 
- * A filter section component using checkboxes for multi-selection capabilities.
+ * CheckboxFilterSection.jsx — Checkbox-Based Collapsible Filter
+ *
+ * A feature-rich filter section component that uses checkboxes for
+ * multi-selection. Used throughout the app for filtering books by
+ * language, author, publisher, category, etc.
+ *
  * Features:
- *  - Checkbox-based selection for better UX
- *  - Smooth expand/collapse animations (Framer Motion)
- *  - Highlighted active filters
- *  - Keyboard accessibility
- *  - Smart sorting by facet count
- *  - Defensive data handling
+ * - Checkbox-based selection (better UX than toggle buttons)
+ * - Built-in search input to quickly find options in large lists
+ * - Select-all checkbox for visible items (can be hidden via prop)
+ * - Smooth expand/collapse animation (Framer Motion)
+ * - Smart sorting: selected items first, then by facet count
+ * - Performance cap: limits rendered items to MAX_ITEMS (100) to
+ *   prevent lag with very large filter lists
+ * - Keyboard accessibility (Escape clears search)
+ *
+ * @param {Object} props
+ * @param {string} props.title - Section heading text.
+ * @param {Array} props.items - Filter option items.
+ * @param {Object} props.facets - Facet counts: { [label]: count }.
+ * @param {Array} props.selectedValues - Currently selected value labels.
+ * @param {Function} props.onToggle - Callback: (value, isChecked) => void.
+ * @param {Function} props.getItemValue - Extract unique value from an item.
+ * @param {Function} props.getItemLabel - Extract display label from an item.
+ * @param {boolean} [props.showCounts=true] - Whether to show facet counts.
+ * @param {boolean} [props.hideSelectAll=false] - Whether to hide the select-all checkbox.
  */
 
 import { useState, useMemo, useCallback } from 'react';
@@ -29,7 +45,10 @@ const CheckboxFilterSection = ({
   const [isExpanded, setIsExpanded] = useState(true);
   const [search, setSearch] = useState("");
 
-  // Handle checkbox change
+  /**
+   * Handle individual checkbox change.
+   * Maps the item to its label and forwards to the parent callback.
+   */
   const handleCheckboxChange = useCallback(
     (item, isChecked) => {
       const label = getItemLabel(item);
@@ -38,7 +57,7 @@ const CheckboxFilterSection = ({
     [getItemLabel, onToggle]
   );
 
-  // Filter items based on search query
+  // Filter items based on the local search query
   const filteredItems = useMemo(() => {
     const query = search.toLowerCase().trim();
     const list = Array.isArray(items) ? items : [];
@@ -48,8 +67,12 @@ const CheckboxFilterSection = ({
     );
   }, [items, search, getItemLabel]);
 
-  // Sort filtered items: selected first, then by facet count
-  // Limit total items to prevent lag with large datasets
+  /**
+   * Sort and cap the filtered items for rendering.
+   * - Selected items always appear first
+   * - Within each group, items are sorted by facet count (descending)
+   * - Total capped at MAX_ITEMS to prevent rendering lag
+   */
   const MAX_ITEMS = 100;
 
   const sortedItems = useMemo(() => {
@@ -59,7 +82,7 @@ const CheckboxFilterSection = ({
       return countB - countA;
     };
 
-    // Partition into selected and non-selected
+    // Partition into selected and non-selected groups
     const selected = filteredItems.filter((item) =>
       selectedValues.includes(getItemLabel(item))
     );
@@ -67,16 +90,15 @@ const CheckboxFilterSection = ({
       !selectedValues.includes(getItemLabel(item))
     );
 
-    // Sort each group by facet count
     const sortedSelected = selected.sort(sortByCount);
     const sortedNonSelected = nonSelected.sort(sortByCount);
 
-    // Always show all selected items, then fill remaining with top non-selected
+    // Always show all selected items, fill remaining slots with top non-selected
     const remainingSlots = Math.max(0, MAX_ITEMS - sortedSelected.length);
     return [...sortedSelected, ...sortedNonSelected.slice(0, remainingSlots)];
   }, [filteredItems, facets, getItemLabel, selectedValues]);
 
-  // Framer Motion variants
+  // Framer Motion animation variants for expand/collapse
   const listVariants = {
     hidden: { opacity: 0, height: 0 },
     visible: {
@@ -89,7 +111,7 @@ const CheckboxFilterSection = ({
 
   return (
     <div className="border-b border-slate-200 dark:border-slate-700 pb-5 last:border-none">
-      {/* Header */}
+      {/* Collapsible section header */}
       <button
         onClick={() => setIsExpanded((p) => !p)}
         className="flex items-center justify-between w-full group"
@@ -106,7 +128,7 @@ const CheckboxFilterSection = ({
         </motion.div>
       </button>
 
-      {/* Expandable content */}
+      {/* Expandable content area */}
       <AnimatePresence initial={false}>
         {isExpanded && (
           <motion.div
@@ -117,9 +139,8 @@ const CheckboxFilterSection = ({
             exit="exit"
             className="mt-3"
           >
-            {/* Search row with select-all checkbox */}
+            {/* Search input row with optional select-all checkbox */}
             <div className="flex items-center gap-3 mb-3">
-              {/* Search input */}
               <input
                 type="text"
                 value={search}
@@ -135,7 +156,7 @@ const CheckboxFilterSection = ({
                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
                   transition-all duration-200"
               />
-              {/* Select all visible checkbox (hidden for single-select) */}
+              {/* Select-all checkbox: toggles all visible items */}
               {!hideSelectAll && (
                 <input
                   type="checkbox"
@@ -160,7 +181,7 @@ const CheckboxFilterSection = ({
               )}
             </div>
 
-            {/* Scrollable list */}
+            {/* Scrollable list of filter options */}
             <div className="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
               {sortedItems.length === 0 ? (
                 <div className="text-sm text-slate-400 italic px-2 py-1">
@@ -193,6 +214,7 @@ const CheckboxFilterSection = ({
                           {label}
                         </span>
                       </label>
+                      {/* Facet count badge (optional via showCounts prop) */}
                       {showCounts && (
                         <span
                           className={`text-xs px-2 py-0.5 rounded-full ${isSelected

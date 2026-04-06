@@ -1,3 +1,21 @@
+/**
+ * CartHeader.jsx — Cart Overlay Header
+ *
+ * Header bar for the cart overlay. Mirrors the main Header component's
+ * structure but is scoped to cart-specific functionality:
+ *
+ * - Cart title with item count
+ * - Search input that filters cart items by book title (debounced)
+ * - "Back to Library" button to close the cart overlay
+ * - Theme toggle button
+ *
+ * The search input uses the same 300ms debounce pattern as the main
+ * Header to avoid excessive re-renders during typing.
+ *
+ * @param {Object} props
+ * @param {Function} props.onClose - Callback to close the cart overlay.
+ */
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { MagnifyingGlassIcon, XMarkIcon, ShoppingBagIcon } from '@heroicons/react/24/outline';
@@ -8,9 +26,13 @@ const CartHeader = ({ onClose }) => {
     const { cart, setCartSelected, cartSelected } = useAppContext();
     const [searchTerm, setSearchTerm] = useState(cartSelected.searchTerm || '');
     const [isSearchFocused, setIsSearchFocused] = useState(false);
+    /** Ref to prevent redundant dispatches when searchTerm hasn't actually changed */
     const prevSearchTerm = useRef('');
 
-    // Debounced search effect
+    /**
+     * Push the debounced search term into cart filter state.
+     * Wrapped in useCallback for stable reference.
+     */
     const debouncedSearch = useCallback(
         (term) => {
             setCartSelected((prev) => ({
@@ -21,6 +43,7 @@ const CartHeader = ({ onClose }) => {
         [setCartSelected]
     );
 
+    // Debounced search effect — waits 300ms after the user stops typing
     useEffect(() => {
         if (prevSearchTerm.current === searchTerm) return;
         prevSearchTerm.current = searchTerm;
@@ -32,6 +55,7 @@ const CartHeader = ({ onClose }) => {
         return () => clearTimeout(timer);
     }, [searchTerm, debouncedSearch]);
 
+    /** Clear the search input and reset the cart search filter */
     const handleClearSearch = () => {
         setSearchTerm('');
         setCartSelected((prev) => ({
@@ -44,6 +68,7 @@ const CartHeader = ({ onClose }) => {
         <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-700 sticky top-0 z-10">
             <div className="container mx-auto px-4 py-3 sm:py-4">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                    {/* Cart title with item count */}
                     <div className="flex items-center justify-between">
                         <motion.div
                             initial={{ x: -20, opacity: 0 }}
@@ -60,7 +85,7 @@ const CartHeader = ({ onClose }) => {
                         </motion.div>
                     </div>
 
-                    {/* Search bar - book name only */}
+                    {/* Search bar — filters cart by book title */}
                     <form onSubmit={(e) => e.preventDefault()} className="flex-1 max-w-2xl">
                         <motion.div
                             className={`relative transition-all duration-300 ${isSearchFocused ? 'scale-[1.02]' : ''}`}
@@ -78,6 +103,7 @@ const CartHeader = ({ onClose }) => {
                                 placeholder="Search by book name..."
                                 className="block w-full pl-10 pr-12 py-2 sm:py-3 border border-slate-300 dark:border-slate-600 rounded-lg sm:rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm sm:text-base"
                             />
+                            {/* Animated clear button */}
                             <AnimatePresence>
                                 {searchTerm && (
                                     <motion.button
@@ -97,6 +123,7 @@ const CartHeader = ({ onClose }) => {
                         </motion.div>
                     </form>
 
+                    {/* Navigation and theme controls */}
                     <div className="flex items-center space-x-4">
                         <motion.button
                             whileHover={{ scale: 1.05 }}
