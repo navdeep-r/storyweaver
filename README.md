@@ -52,14 +52,14 @@ StoryWeaver Library solves a practical problem: the official StoryWeaver platfor
 │                                                     │
 │  LanguageOverlay ─► BookBrowser ─► BookGrid/Cards   │
 │          │               │              │           │
-│          │          FilterSidebar   BookDetailsModal │
+│          │         FilterSidebar   BookDetailsModal │
 │          │                                          │
-│          └──── CartPanel ─► CartView ─► CartTable    │
+│          └──── CartPanel ─► CartView ─► CartTable   │
 │                                   │                 │
 │                            CartFilterSidebar        │
 │                                                     │
 │  ┌─────────────┐    ┌──────────────────────────┐    │
-│  │ AppContext   │◄──►│  backendApi.js (fetch)   │    │
+│  │ AppContext  │◄──►│  backendApi.js (fetch)   │    │
 │  │ (useReducer)│    └──────────┬───────────────┘    │
 │  └─────────────┘               │                    │
 └────────────────────────────────┼────────────────────┘
